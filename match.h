@@ -420,10 +420,13 @@ class match{
     }
     
     void printOverallsPrs(team tm1,team tm2){
-        const int scrLength=90;
-        int t,c,s;
+		int maxLength;
+		int scrLength;
+        int t,s;
 		stringstream ts1[14];
 		stringstream ts2[14];
+		stringstream ov1,ov2;
+		stringstream ovf1,ovf2;
         stringstream cadr;
 
 		for(int i=0; 14>i; i++){
@@ -478,14 +481,33 @@ class match{
                 }
             }
 		}
+		
+		double t1FirstStrength=getTeamFirstStrength(tm1);
+		double t2FirstStrength=getTeamFirstStrength(tm2);
+		double t1Strength=getTeamStrength(tm1);
+		double t2Strength=getTeamStrength(tm2);
+		
+		if(t1FirstStrength!=-2) ovf1<<"FL Strength: "<<player::getOverallString(t1FirstStrength);
+		else ovf1<<"FL Strength: "<<player::getOverallString(-2);
+		
+		if(t2FirstStrength!=-2) ovf2<<"FL Strength: "<<player::getOverallString(t2FirstStrength);
+		else ovf2<<"FL Strength: "<<player::getOverallString(-2);
+
+		if(t1Strength!=-2) ov1<<"Strength: "<<player::getOverallString(t1Strength);
+		else ov1<<"Strength: "<<player::getOverallString(-2);
+		
+		if(t2Strength!=-2) ov2<<"Strength: "<<player::getOverallString(t2Strength);
+		else ov2<<"Strength: "<<player::getOverallString(-2);
 
 		cout<<endl<<endl;
 
         cadr<<"$$BLU";
+		s=8; t=26;
+		scrLength=(s*2)+(t*2);
+		maxLength=(t*2)+2;
+		
 		setColor("BOLDBLUE"); beforeStrWhere("Players Overalls Ratings",scrLength); setColor("RESET");cout<<endl;
-		s=21; t=23;
-		c=2+(t*2);
-		space(s); ccsPrint(cadr); cadr_dash(c,true); setColor("RESET");cout<<endl;
+		space(s); ccsPrint(cadr); cadr_dash(maxLength,true); setColor("RESET");cout<<endl;
 		for(int i=0; 11>i; i++){
             space(s); ccsPrint(cadr); cout<<"|"; setColor("RESET");
             strwhere(ts1[i],t,1);
@@ -493,14 +515,24 @@ class match{
             ccsPrint(cadr); cout<<"|"; setColor("RESET"); cout<<endl; 
 		}
 		
-		space(s); ccsPrint(cadr); cadr_dash(c,true); setColor("RESET");cout<<endl;
+		space(s); ccsPrint(cadr); cadr_dash(maxLength,true); setColor("RESET");cout<<endl;
 		for(int i=11; 14>i; i++){
             space(s); ccsPrint(cadr); cout<<"|"; setColor("RESET");
             strwhere(ts1[i],t,1);
             strwhere(ts2[i],t,1);
             ccsPrint(cadr); cout<<"|"; setColor("RESET");cout<<endl;		
 		}
-		space(s); ccsPrint(cadr); cadr_dash(c,true); setColor("RESET");cout<<endl;
+		space(s); ccsPrint(cadr); cadr_dash(maxLength,true); setColor("RESET");cout<<endl;
+		
+		space(s); ccsPrint(cadr); cout<<"|"; setColor("RESET");
+		strwhere(ovf1,t,1); strwhere(ovf2,t,1);
+		ccsPrint(cadr); cout<<"|"; setColor("RESET");cout<<endl;
+			
+		space(s); ccsPrint(cadr); cout<<"|"; setColor("RESET");
+		strwhere(ov1,t,1); strwhere(ov2,t,1);
+		ccsPrint(cadr); cout<<"|"; setColor("RESET");cout<<endl;
+			
+		space(s); ccsPrint(cadr); cadr_dash(maxLength,true); setColor("RESET");cout<<endl;
     }
     
     void setOverallPrs(team tm1,team tm2,bool edit=false){
@@ -685,37 +717,69 @@ class match{
             printOverallsPrs(tm1,tm2);
         }
     }
-    
-    double getTeamStrength(team tm){
+	
+	double getTeamStrength(int tmId){
 		int sum=0;
 		int *pov;
 		int *tov;
 		int tt;
 		int num;
 		
-		if(tm.sendid()==1){
+		if(tmId==1){
 			pov=t1_pov;
 			tov=t1_tov;
 			tt=t1_tt;
 		}
-		else if(tm.sendid()==2){
+		else if(tmId==2){
 			pov=t2_pov;
 			tov=t2_tov;
 			tt=t2_tt;	
 		}
+		else throw -1;
+		
 		num=11+tt;
 		
 		for(int i=0; 11>i; i++){
 			if(pov[i]>0) sum+=pov[i];
-			else return -1;
+			else return -2;
 		}
 		
 		for(int i=0; tt>i; i++){
 			if(tov[i]>0) sum+=tov[i];
-			else return -1;
+			else return -2;
 		}
 		return (double)sum/num;
 	}
+	
+    double getTeamStrength(team tm){
+		if(tm.sendid()==1) return getTeamStrength(1);
+		else if(tm.sendid()==2) return getTeamStrength(2);
+		throw -1;
+	}
+	
+	
+    double getTeamFirstStrength(int tmId){
+		int sum=0;
+		int *pov;
+		int num;
+		
+		if(tmId==1) pov=t1_pov;
+		else if(tmId==2) pov=t2_pov;
+		num=11;
+		
+		for(int i=0; 11>i; i++){
+			if(pov[i]>0) sum+=pov[i];
+			else return -2;
+		}
+		return (double)sum/num;
+	}
+	
+    double getTeamFirstStrength(team tm){
+		if(tm.sendid()==1) return getTeamFirstStrength(1);
+		else if(tm.sendid()==2) return getTeamFirstStrength(2);
+		throw -1;
+	}
+	
 	
 	int ** getPlayersStats(){
 		int ** prStats;
@@ -1320,6 +1384,15 @@ class match{
 		else if (strcasecmp(index,"t2_right")==0) return t2_right;
 		else throw -1;
 	}
+	
+	double doubleDynamicGet(const char *index){
+		if(strcasecmp(index,"t1_flstrength")==0) return getTeamFirstStrength(1);
+		else if(strcasecmp(index,"t2_flstrength")==0) return getTeamFirstStrength(2);
+		else if(strcasecmp(index,"t1_strength")==0) return getTeamStrength(1);
+		else if(strcasecmp(index,"t2_strength")==0) return getTeamStrength(2);
+		else throw -1;
+	}
+		
 	        
 	void setFirstLineup(team tm){
 		setLineup(tm,true);

@@ -287,6 +287,13 @@ void strwhere(const char *a,int zarf){
     strwhere(a,zarf,0);
 }
 
+int findIndexInIntArray(int value,int *array,int length){
+	for(int i=0; length>i; i++){
+		if(value==array[i]) return i;
+	}
+	return -1;
+}
+
 int generateNewPrId(team tm1,team tm2){
     bool correct;
     int min=1000;
@@ -574,8 +581,8 @@ bool mainMenu(team& t1,team& t2,match *games,inputProfile& inpSettings,const cha
         
         cout<<"\nEnter your choice: ";
         int choice = inputChoice(1,num+2+canSave);
-        if(choice==1) t1.teamManage(t2);
-        else if(choice==2) t2.teamManage(t1);
+        if(choice==1) t1.teamManage(t2,games);
+        else if(choice==2) t2.teamManage(t1,games);
 		else if(choice==3 && lostDataWarning(t1,t2,games,inpSettings,true)) externalShowAllPrs(arg);
         else if(choice==4) add_game(games,t1,t2,inpSettings);
         else if(choice==5) editGame(games,t1,t2);
@@ -609,20 +616,22 @@ void competition_stats(team tm1,team tm2,match m[200]){
 		setColor("BOLDRED");
         cout<<"Competition Stats:\n";
         setColor("RESET");
-		cout<<"1: Compare Teams\n2: Results Graph\n3: See Most\n4: Goals Times\n5: Best Solo Performance\n"
-		<<"6: Subsume Players\n7: Winners Against Loosers\n8: Back to main\n\nEnter your choice: ";
-        choice=inputChoice(1,8);
+		cout<<"1: Compare Teams\n2: Results Graph\n3: See Most Stats\n4: See Minimums Stats\n5: Goals Times\n"
+		<<"6: Best Solo Performance\n7: Subsume Players\n8: Winners Against Loosers\n"
+		<<"9: Back to main\n\nEnter your choice: ";
+        choice=inputChoice(1,9);
 		switch(choice){
 			//case 1: league.compareTeams(); break;
 			case 1: league.revCompareTeams(); break;
 			case 2: league.printGraphResults(); break;
 			case 3: league.printMost(); break;
-			case 4: league.printGoalTimes(); break;
-			case 5: league.printBestSoloPerformance(); break;
-			case 6: league.subsumePlayers(); break;
-			case 7: league.WinnerAgLooser(); break;
+			case 4: league.printMins(); break;
+			case 5: league.printGoalTimes(); break;
+			case 6: league.printBestSoloPerformance(); break;
+			case 7: league.subsumePlayers(); break;
+			case 8: league.WinnerAgLooser(); break;
 		}
-		if (choice==8) break;
+		if (choice==9) break;
 	}
 }
 
@@ -758,18 +767,16 @@ void show_game(match *m,team tm1,team tm2){
     }
 }
 
-void newTermPlayers(team tm1,team tm2,match *m){
+/*void newTermPlayers(team tm1,team tm2,match *m){
 	int numPrs1=tm1.getNumPrs();
 	int numPrs2=tm2.getNumPrs();
 	int maxNumPrs;
 	if(numPrs1>numPrs2) maxNumPrs=numPrs1;
 	else maxNumPrs=numPrs2;
 	
-	cout<<endl;
 	char charCommand[80];
-	sprintf(charCommand,"resize -s %d %d",maxNumPrs+5,44);
+	sprintf(charCommand,"resize -s %d %d",maxNumPrs+6,44);
 	system(charCommand);
-	cout<<endl;
 	
 	system("reset");
 	
@@ -880,10 +887,134 @@ void newTermPlayers(team tm1,team tm2,match *m){
 		cout<<endl;
 	}
 	ccsPrint(cadr); space(1); cadr_dash(tDash); setColor("RESET");
+}*/
+
+void newTermPlayers(team tm1,team tm2,match *m){
+	int numPrs1=tm1.getNumPrs();
+	int numPrs2=tm2.getNumPrs();
+	int maxNumPrs;
+	
+	bool t1PrintedPrs[200];
+	bool t2PrintedPrs[200];
+	stringstream t1Players[201];
+	stringstream t2Players[201];
+	
+	int t=20;
+	int tDash=42;
+	stringstream cadr;
+	
+	tm1.sortPrs("number");
+	tm2.sortPrs("number");
+	
+	if(numPrs1>numPrs2) maxNumPrs=numPrs1;
+	else maxNumPrs=numPrs2;
+	
+	char charCommand[80];
+	sprintf(charCommand,"resize -s %d %d",maxNumPrs+6,44);
+	system(charCommand);
+	
+	system("reset");
+	
+	for(int i=0; 200>i; i++) t1PrintedPrs[i]=false;
+	for(int i=0; 200>i; i++) t2PrintedPrs[i]=false;
+	
+	int numGames=getNumGames(m);
+	int t1Index=0;
+	int t2Index=0;
+	for(int i=1; 3>=i && numGames-i>=0 ;i++){
+		for(int j=0; 11>j; j++){
+			if(m[numGames-i].t1_prs[j]>0){
+				int Id=m[numGames-i].t1_prs[j];
+				int Index=tm1.getPrIndexFromId(Id);
+				if(t1PrintedPrs[Index]) continue;
+				t1PrintedPrs[Index]=true;
+				t1Players[t1Index++]<<"$0MAG"<<tm1.getPrFromIndex(Index).getNumber()<<": "
+				<<tm1.getPrFromIndex(Index).sendname()<<"$0RST";
+			}
+		}
+		
+		for(int j=0; 11>j; j++){
+			if(m[numGames-i].t2_prs[j]>0){
+				int Id=m[numGames-i].t2_prs[j];
+				int Index=tm2.getPrIndexFromId(Id);
+				if(t2PrintedPrs[Index]) continue;
+				t2PrintedPrs[Index]=true;
+				t2Players[t2Index++]<<"$0CYN"<<tm2.getPrFromIndex(Index).getNumber()<<": "
+				<<tm2.getPrFromIndex(Index).sendname()<<"$0RST";
+			}
+		}
+		
+		for(int j=0; 3>j; j++){
+			if(m[numGames-i].t1_tvz[j]>0){
+				int Id=m[numGames-i].t1_tvz[j];
+				int Index=tm1.getPrIndexFromId(Id);
+				if(t1PrintedPrs[Index]) continue;
+				t1PrintedPrs[Index]=true;
+				t1Players[t1Index++]<<"$0MAG"<<tm1.getPrFromIndex(Index).getNumber()<<": "
+				<<tm1.getPrFromIndex(Index).sendname()<<"$0RST";
+			}
+		}
+		
+		for(int j=0; 3>j; j++){
+			if(m[numGames-i].t2_tvz[j]>0){
+				int Id=m[numGames-i].t2_tvz[j];
+				int Index=tm2.getPrIndexFromId(Id);
+				if(t2PrintedPrs[Index]) continue;
+				t2PrintedPrs[Index]=true;
+				t2Players[t2Index++]<<"$0CYN"<<tm2.getPrFromIndex(Index).getNumber()<<": "
+				<<tm2.getPrFromIndex(Index).sendname()<<"$0RST";
+			}
+		}
+	}
+	
+	t1Players[t1Index++]<<"$$BLU"<<"------------"<<"$0RST";
+	t2Players[t2Index++]<<"$$BLU"<<"------------"<<"$0RST";
+	
+	for(int i=0; tm1.getPrFromIndex(i).sendexist(); i++){
+		int Index=i;
+		if(t1PrintedPrs[Index]) continue;
+		t1PrintedPrs[Index]=true;
+		t1Players[t1Index++]<<"$0MAG"<<tm1.getPrFromIndex(Index).getNumber()<<": "
+		<<tm1.getPrFromIndex(Index).sendname()<<"$0RST";
+	}
+	
+	for(int i=0; tm2.getPrFromIndex(i).sendexist(); i++){
+		int Index=i;
+		if(t2PrintedPrs[Index]) continue;
+		t2PrintedPrs[Index]=true;
+		t2Players[t2Index++]<<"$0CYN"<<tm2.getPrFromIndex(Index).getNumber()<<": "
+		<<tm2.getPrFromIndex(Index).sendname()<<"$0RST";
+	}
+	
+	
+	cadr<<"$$BLU";
+	setColor("BOLDBLUE");
+	beforeStrWhere("Teams Squad List",tDash);
+	setColor("RESET");
+	cout<<endl;
+	ccsPrint(cadr); space(1); cadr_dash(tDash); setColor("RESET");
+	for(int i=0; maxNumPrs+1>i; i++){
+		
+		ccsPrint(cadr);
+		cout<<" |";
+		setColor("RESET");
+		
+		if(numPrs1+1>i) strwhere(t1Players[i],t,1);
+		else strwhere("",t,1);
+		
+		if(numPrs2+1>i) strwhere(t2Players[i],t,1);
+		else strwhere("",t,1);
+
+		ccsPrint(cadr);
+		cout<<"|";
+		setColor("RESET");
+		cout<<endl;
+	}
+	ccsPrint(cadr); space(1); cadr_dash(tDash); setColor("RESET");
 }
 
 
-void showWALTable(teamGameStat teamOne,teamGameStat teamTwo,bool showCards, bool showSubs){
+void showWALTable(teamGameStat teamOne,teamGameStat teamTwo,bool showCards, bool showSubs,bool showOv){
 	int s,t,c,ttitle;
 	stringstream ts1[14];
 	stringstream ts2[14];
@@ -894,6 +1025,8 @@ void showWALTable(teamGameStat teamOne,teamGameStat teamTwo,bool showCards, bool
     stringstream temp4;
     stringstream temp5;
     stringstream temp6;
+	stringstream ov1,ov2;
+	stringstream ovf1,ovf2;
 	
 	bool exGoals=true;
 	bool exPossess=(teamOne.possess!=-2 && teamTwo.possess!=-2);
@@ -906,6 +1039,10 @@ void showWALTable(teamGameStat teamOne,teamGameStat teamTwo,bool showCards, bool
 	bool exInterc=(teamOne.interc!=-2 && teamTwo.interc!=-2);
 	bool exTackles=(teamOne.tackles!=-2 && teamTwo.tackles!=-2);
 	bool exSaves=(teamOne.saves!=-2 && teamTwo.saves!=-2);
+	
+	bool exFLStrength=(teamOne.sFOverall!=-2 && teamTwo.sFOverall!=-2);
+	bool exStrength=(teamOne.sOverall!=-2 && teamTwo.sOverall!=-2);
+	
 	bool exCards=((teamOne.nCards[0]!=-2 && teamOne.nCards[1]!=-2)
 	&& (teamTwo.nCards[0]!=-2 && teamTwo.nCards[1]!=-2) && showCards);
 	bool exSubs=(teamOne.nSub!=-2 && teamTwo.nSub!=-2 && showSubs);
@@ -947,6 +1084,11 @@ void showWALTable(teamGameStat teamOne,teamGameStat teamTwo,bool showCards, bool
 	
 	if(teamOne.nSub==-2) ts1[13]<<"UK"; else ts1[13]<<setprecision(2)<<teamOne.nSub;
 	if(teamTwo.nSub==-2) ts2[13]<<"UK"; else ts2[13]<<setprecision(2)<<teamTwo.nSub;
+	
+	if(teamOne.sOverall==-2) ov1<<"UK"; else ov1<<player::getOverallString(teamOne.sOverall);
+	if(teamTwo.sOverall==-2) ov2<<"UK"; else ov2<<player::getOverallString(teamTwo.sOverall);
+	if(teamOne.sOverall==-2) ovf1<<"UK"; else ovf1<<player::getOverallString(teamOne.sFOverall);
+	if(teamTwo.sOverall==-2) ovf2<<"UK"; else ovf2<<player::getOverallString(teamTwo.sFOverall);
 	
 	/*if(teamOne.shots[0]==-2 || teamOne.shots[1]==-2){
 		if(teamOne.shots[0]==-2 && teamOne.shots[1]==-2) ts1[2]<<"UK";
@@ -1004,6 +1146,12 @@ void showWALTable(teamGameStat teamOne,teamGameStat teamTwo,bool showCards, bool
 	if(exInterc){ space(s); cout<<"|"; strwhere(ts1[8],t); strwhere("Interception",ttitle); strwhere(ts2[8],t); ccsPrint(cadr); cout<<"|"<<endl; space(s); cadr_dash(c);}
 	if(exTackles){ space(s); cout<<"|"; strwhere(ts1[9],t); strwhere("Tackles",ttitle); strwhere(ts2[9],t); ccsPrint(cadr); cout<<"|"<<endl; space(s); cadr_dash(c);}
 	if(exSaves){ space(s); cout<<"|"; strwhere(ts1[10],t); strwhere("Saves",ttitle); strwhere(ts2[10],t); ccsPrint(cadr); cout<<"|"<<endl; space(s); cadr_dash(c);}
+	
+	if(showOv && (exFLStrength || exStrength)){
+		if(exFLStrength){ space(s); cout<<"|"; strwhere(ovf1,t); strwhere("FL Strength",ttitle); strwhere(ovf2,t); ccsPrint(cadr); cout<<"|"<<endl; space(s); cadr_dash(c);}
+		if(exStrength){ space(s); cout<<"|"; strwhere(ov1,t); strwhere("Strength",ttitle); strwhere(ov2,t); ccsPrint(cadr); cout<<"|"<<endl; space(s); cadr_dash(c);}
+	}
+		
 }
 
 void correctData(team &tm1, team &tm2, match *m,inputProfile &inpSettings){

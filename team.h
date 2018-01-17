@@ -205,6 +205,10 @@ class team{
 	char* getName(){return name;}
 	void printname(void){ cout<<name;}
 	
+	void sortPrsByDebut(match *);
+	void showSqadList(match *);
+	void teamManage(team,match *);
+	
 	void show(void){
 		setColor("BOLDRED");
 		cout<<"\nName: "<<name;
@@ -318,61 +322,6 @@ class team{
 			ccsPrint(cadr); cout<<"|"<<endl;
 		}
 		space(s); ccsPrint(cadr); cadr_dash(maxLength); setColor("RESET");
-	}
-	
-	void showSqadList(void){
-		if(pr[0].sendexist()==0) cout<<"\nThis team till now have not any players\n";
-		else{
-			while(true){
-				setColor("BOLDGREEN");
-				cout<<"\nSquad List:\n";
-				setColor("RESET");
-				for(int i=0; pr[i].exist!=0; i++){
-					pr[i].namePostShow();
-					cout<<endl;
-				}
-				
-				int num=0;
-				cout<<endl;
-				setColor("BOLDRED");
-				cout<<"Next Work?"<<endl;
-				setColor("RESET");
-				cout<<++num<<": Show a Player Details\n";
-				cout<<++num<<": Sort by Numbers\n";
-				cout<<++num<<": Sort by Posts\n";
-				cout<<++num<<": Sort by Overall Ratings\n";
-				cout<<++num<<": Back To Team Menu\n";
-				cout<<"Enter Your Choice: ";
-				int choice=inputChoice(1,num);
-				if(choice==1){
-					show_a_player:
-					int ind;
-					cout<<endl<<"Enter Player Club Number: ";
-					ind=nextInt();
-					
-					try{
-						getPrFromNumber(ind).show();
-					}
-					catch(int ex){
-						cout<<endl<<"There is no Player with this Number!"<<endl;
-					}
-					
-					cout<<endl;
-					setColor("BOLDRED");
-					cout<<"Next Work?"<<endl;
-					setColor("RESET");
-					cout<<"1: Show Squad List\n2: Show another Player Details\n3: Back To Team Menu\n";
-					cout<<"Enter Your Choice: ";
-					int choice=inputChoice(1,3);
-					if(choice==2) goto show_a_player;
-					else if(choice==3) return;
-				}
-				else if(choice==2) sortPrs("number");
-				else if(choice==3) sortPrs("post");
-				else if(choice==4) sortPrs("overallRating",true);
-				else if(choice==5) return;
-			}
-		}
 	}
 	
 	void show_det_prs(void){
@@ -499,7 +448,7 @@ class team{
             setColor("BOLDRED");
             cout<<endl<<"Next Work?\n";
             setColor("RESET");
-            cout<<"1: Enter Another Player\n2: Edit\n3: Refuse Last Entry And Back\n4: Apply And Back To Recent Menu\n\n";
+            cout<<"1: Apply And Enter Another Player\n2: Edit Entry\n3: Refuse Last Entry And Back\n4: Apply And Back To Recent Menu\n\n";
             cout<<"Enter Your Choice: ";
             choice=inputChoice(1,4);
             if(choice==2) goto input;
@@ -748,37 +697,7 @@ class team{
         }
             
     }
-        
-	void teamManage(team other){
-		int choice;
-		while(1){
-			cout<<"\n";
-			setColor("BOLDRED");
-			printname();
-			cout<<" Session:\n";
-			setColor("RESET");
-			cout<<"1: Show Team Results\n";
-			cout<<"2: Add Players\n";
-			cout<<"3: Edit Players\n";
-			cout<<"4: Change Player Numbers\n";
-			cout<<"5: Show Squad List \n";
-			cout<<"6: Show Detailed Player List\n";
-			cout<<"7: Back to main\n";
-			
-			cout<<endl<<"Enter your choice: ";
-			choice=inputChoice(1,7);
-			
-			switch(choice){
-				case 1: show(); break;
-				case 2: add_prs(other); break;
-				case 3: editPrs(other); break;
-				case 4: editPrNumbers(); break;
-				case 5: showSqadList(); break;
-				case 6: show_det_prs(); break;
-			}
-			if (choice==7) break;
-		}
-	}
+
         
 	friend class match;
 	friend class competition;

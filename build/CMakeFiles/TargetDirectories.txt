@@ -1,7 +1,0 @@
-/home/sadegh/Documents/Programming/KDevelop/ArenaCPP/build/CMakeFiles/install.dir
-/home/sadegh/Documents/Programming/KDevelop/ArenaCPP/build/CMakeFiles/list_install_components.dir
-/home/sadegh/Documents/Programming/KDevelop/ArenaCPP/build/CMakeFiles/rebuild_cache.dir
-/home/sadegh/Documents/Programming/KDevelop/ArenaCPP/build/CMakeFiles/arenacpp.dir
-/home/sadegh/Documents/Programming/KDevelop/ArenaCPP/build/CMakeFiles/edit_cache.dir
-/home/sadegh/Documents/Programming/KDevelop/ArenaCPP/build/CMakeFiles/install/strip.dir
-/home/sadegh/Documents/Programming/KDevelop/ArenaCPP/build/CMakeFiles/install/local.dir

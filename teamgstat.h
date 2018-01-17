@@ -17,6 +17,8 @@ struct teamGameStat{
 	double interc;
 	double tackles;
 	double saves;
+	double sOverall;
+	double sFOverall;
 	double nCards[2];
 	
 	//teamGameStat(){}
@@ -25,11 +27,13 @@ struct teamGameStat{
 		nSub=defValue; nGoals=defValue; possess=defValue; shots[0]=defValue; shots[1]=defValue;
 		fouls[0]=defValue; fouls[1]=defValue; corners=defValue; fk=defValue; passC=defValue;
 		cross=defValue; interc=defValue; tackles=defValue; saves=defValue; nCards[0]=defValue; nCards[1]=defValue;
+		sOverall=defValue; sFOverall=defValue;
 	}
 	
 	bool isComplete(){
 		if(nSub>=0 && nGoals>=0 && possess>=0 && shots[0]>=0 && shots[1]>=0 && fouls[0]>=0 && fouls[1]>=0 && corners>=0
-		&& fk>=0 && passC>=0 && cross>=0 && interc>=0 && tackles>=0 && saves>=0 && nCards[0]>=0 && nCards[1]>=0){
+		&& fk>=0 && passC>=0 && cross>=0 && interc>=0 && tackles>=0 && saves>=0 && nCards[0]>=0 && nCards[1]>=0
+		&& sOverall>=0 && sFOverall>=0){
 			return true;
 		}
 		return false;
@@ -58,6 +62,8 @@ struct teamGameStat{
 		else{ nCards[0]=-2; nCards[1]=-2;}
 		
 		if(number[++num]>0){ nSub/=number[num];} else{ nSub=-2;}
+		if(number[++num]>0){ sFOverall/=number[num];} else{ sFOverall=-2;}
+		if(number[++num]>0){ sOverall/=number[num];} else{ sOverall=-2;}
 	}
 };
 

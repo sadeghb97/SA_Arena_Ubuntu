@@ -19,7 +19,8 @@ class competition{
 		maxStreak=new int[3];    //0:Streak | 1:Start | 2:End
 		for(int i=0; 3>i; i++) maxStreak[i]=0;
 		
-		for(int i=0; games[i].sendexist() && 200>i; i++){
+		int i;
+		for(i=0; games[i].sendexist() && 200>i; i++){
 			if(streak==0) start=i;
 			if(games[i].getResult()==tm.sendid() || (state==1 && games[i].getResult()==3)) streak++;
 			else{
@@ -30,6 +31,12 @@ class competition{
 				}
 				streak=0;
 			}
+		}
+		
+		if(streak>maxStreak[0]){
+			maxStreak[0]=streak;
+			maxStreak[1]=start;
+			maxStreak[2]=i-1;
 		}
 		
 		return maxStreak;
@@ -94,7 +101,7 @@ class competition{
         stringstream temp5;
         stringstream temp6;
                 
-		int numGames[13];
+		int numGames[15];
 		char winName[40];
 		char looseName[40];
 		strcpy(winName,"Winner");
@@ -102,7 +109,7 @@ class competition{
 		teamGameStat win(winName,0);
 		teamGameStat loose(looseName,0);
 		
-		for(int i=0; 13>i; i++) numGames[i]=0;
+		for(int i=0; 15>i; i++) numGames[i]=0;
 		//0: Goals
 		//1: Possess
 		//2: Shots
@@ -198,6 +205,22 @@ class competition{
 					loose.nSub+=games[i].t2_tt;
 					numGames[12]++;
 				}
+				
+				double tWFirstStrength=games[i].getTeamFirstStrength(1);
+				double tLFirstStrength=games[i].getTeamFirstStrength(2);
+				if(tWFirstStrength>=0 && tLFirstStrength>=0){
+					win.sFOverall+=tWFirstStrength;
+					loose.sFOverall+=tLFirstStrength;
+					numGames[13]++;
+				}
+				
+				double tWStrength=games[i].getTeamStrength(1);
+				double tLStrength=games[i].getTeamStrength(2);
+				if(tWStrength>=0 && tLStrength>=0){
+					win.sOverall+=tWStrength;
+					loose.sOverall+=tLStrength;
+					numGames[14]++;
+				}
 			}
 			
 			if(games[i].res==2){
@@ -278,6 +301,22 @@ class competition{
 					loose.nSub+=games[i].t1_tt;
 					numGames[12]++;
 				}
+				
+				double tWFirstStrength=games[i].getTeamFirstStrength(2);
+				double tLFirstStrength=games[i].getTeamFirstStrength(1);
+				if(tWFirstStrength>=0 && tLFirstStrength>=0){
+					win.sFOverall+=tWFirstStrength;
+					loose.sFOverall+=tLFirstStrength;
+					numGames[13]++;
+				}
+				
+				double tWStrength=games[i].getTeamStrength(2);
+				double tLStrength=games[i].getTeamStrength(1);
+				if(tWStrength>=0 && tLStrength>=0){
+					win.sOverall+=tWStrength;
+					loose.sOverall+=tLStrength;
+					numGames[14]++;
+				}
 			}
 		}
 		
@@ -289,32 +328,95 @@ class competition{
 		win.convertToPerGame(numGames);
 		loose.convertToPerGame(numGames);
 		//cout<<endl<<"WinnerGoals: "<<win.nGoals<<" | LooserGoals: "<<loose.nGoals<<endl;
-		showWALTable(win,loose,true,true);
+		showWALTable(win,loose,true,true,true);
 	}
 	
-	bool existKnownData(const char * factor){
-		for(int i=0; games[i].sendexist(); i++){
-			if(games[i].dynamicGet(factor)!=-2) return true;
+	bool existKnownData(const char * factor, bool isDouble=false){
+		if(!isDouble){
+			for(int i=0; games[i].sendexist(); i++){
+				if(games[i].dynamicGet(factor)>=0) return true;
+			}
+		}
+		
+		else{
+			for(int i=0; games[i].sendexist(); i++){
+				if(games[i].doubleDynamicGet(factor)>=0) return true;
+			}
 		}
 		return false;
 	}
 	
-	int getMaxMatchIndex(const char * factor){
-		int max,index;
-		max=games[0].dynamicGet(factor);
+	int getMaxMatchIndex(const char * factor,bool isDouble=false){
+		int index;
+		double max;
 		index=0;
-		for(int i=1; 200>i && games[i].sendexist(); i++){
-			if(games[i].dynamicGet(factor)>max){
-				max=games[i].dynamicGet(factor);
-				index=i;
+		max=-1000;
+		
+		if(!isDouble){
+			int localMax=games[0].dynamicGet(factor);
+			for(int i=1; 200>i && games[i].sendexist(); i++){
+				if(games[i].dynamicGet(factor)>localMax){
+					localMax=games[i].dynamicGet(factor);
+					index=i;
+				}
+				
+				else if((strcasecmp(factor,"t1DifGoals")==0 || strcasecmp(factor,"t2DifGoals")==0) &&
+				games[i].dynamicGet(factor)==localMax && games[i].dynamicGet("tg")>games[index].dynamicGet("tg")){
+					index=i;
+				}
 			}
-			else if((strcasecmp(factor,"t1DifGoals")==0 || strcasecmp(factor,"t2DifGoals")==0) &&
-			games[i].dynamicGet(factor)==max && games[i].dynamicGet("tg")>games[index].dynamicGet("tg")){
-				index=i;
-			}
+			if(localMax==-2) return -1;
 		}
-		if(max==-2) return -1;
+		
+		else{
+			max=games[0].doubleDynamicGet(factor);
+			for(int i=1; 200>i && games[i].sendexist(); i++){
+				if(games[i].doubleDynamicGet(factor)>max){
+					max=games[i].doubleDynamicGet(factor);
+					index=i;
+				}
+			}
+			if(max==-2) return -1;
+		}
+		
 		return index;
+	}
+	
+	int getMinMatchIndex(const char * factor,bool isDouble=false){
+		int index;
+		index=0;
+		
+		if(!isDouble){
+			int localMin=INT_MAX;
+			for(int i=0; 200>i && games[i].sendexist(); i++){
+				int value=games[i].dynamicGet(factor);
+				
+				if(value<localMin && value>=0){
+					localMin=games[i].dynamicGet(factor);
+					index=i;
+				}
+				
+				else if((strcasecmp(factor,"t1DifGoals")==0 || strcasecmp(factor,"t2DifGoals")==0) &&
+				value==localMin && games[i].dynamicGet("tg")>games[index].dynamicGet("tg")){
+					index=i;
+				}
+			}
+			if(localMin==INT_MAX) return -1;
+			return index;
+		}
+		
+		else{
+			double min=INT_MAX;
+			for(int i=0; 200>i && games[i].sendexist(); i++){
+				double value=games[i].doubleDynamicGet(factor);
+				if(value<min && value>=0){
+					min=value;
+					index=i;
+				}
+			}
+			if(min==INT_MAX) return -1;
+			return index;
+		}
 	}
 	
 	int** getFastestAndLatestGoal(){
@@ -632,23 +734,300 @@ class competition{
 				
 				cout<<endl;
 			}
+			
+			if(existKnownData("t1_flstrength",true) || existKnownData("t2_flstrength",true)){
+				cout<<endl; setColor("BOLDBLUE"); cout<<"Max First Line Up Strength:"; setColor("RESET");
+				
+				if(existKnownData("t1_flstrength",true)){
+					cout<<endl; setColor("BOLDMAGENTA"); cout<<teamOne.getName()<<": ";
+					index=getMaxMatchIndex("t1_flstrength",true);
+					cout<<setprecision(3)<<games[index].doubleDynamicGet("t1_flstrength")<<" | Game "<<index+1; setColor("RESET");
+				}
+				
+				if(existKnownData("t2_flstrength",true)){
+					cout<<endl; setColor("BOLDCYAN"); cout<<teamTwo.getName()<<": ";
+					index=getMaxMatchIndex("t2_flstrength",true);
+					cout<<setprecision(3)<<games[index].doubleDynamicGet("t2_flstrength")<<" | Game "<<index+1; setColor("RESET");
+				}
+				
+				cout<<endl;
+			}
+			
+			if(existKnownData("t1_strength",true) || existKnownData("t2_strength",true)){
+				cout<<endl; setColor("BOLDBLUE"); cout<<"Max Overall Line Up Strength:"; setColor("RESET");
+				
+				if(existKnownData("t1_strength",true)){
+					cout<<endl; setColor("BOLDMAGENTA"); cout<<teamOne.getName()<<": ";
+					index=getMaxMatchIndex("t1_strength",true);
+					cout<<setprecision(3)<<games[index].doubleDynamicGet("t1_strength")<<" | Game "<<index+1; setColor("RESET");
+				}
+				
+				if(existKnownData("t2_strength",true)){
+					cout<<endl; setColor("BOLDCYAN"); cout<<teamTwo.getName()<<": ";
+					index=getMaxMatchIndex("t2_strength",true);
+					cout<<setprecision(3)<<games[index].doubleDynamicGet("t2_strength")<<" | Game "<<index+1; setColor("RESET");
+				}
+				
+				cout<<endl;
+			}
 		}
 	}
 	
-	int getNumAbsValues(const char * factor){
+	void printMins(){
+		if(!games[0].sendexist()) cout<<endl<<"Mosabeghe ei sabt nashode ast!"<<endl;
+		else if(teamOne.sendid()==2 && teamTwo.sendid()==1) cout<<endl<<"Error in Teams Order"<<endl;
+		else{
+			int index;
+			cout<<endl; setColor("BOLDRED"); cout<<"Minimum Stats: "; setColor("RESET"); cout<<endl;
+			
+			if(existKnownData("t1_shotsOne") || existKnownData("t2_shotsOne")){
+				cout<<endl; setColor("BOLDBLUE"); cout<<"Minimum Shots:"; setColor("RESET");
+				
+				if(existKnownData("t1_shotsOne")){
+					cout<<endl; setColor("BOLDMAGENTA"); cout<<teamOne.getName()<<": ";
+					index=getMinMatchIndex("t1_shotsOne");
+					cout<<games[index].dynamicGet("t1_shotsOne")<<" Shots | Game "<<index+1; setColor("RESET");
+				}
+				
+				if(existKnownData("t2_shotsOne")){
+					cout<<endl; setColor("BOLDCYAN"); cout<<teamTwo.getName()<<": ";
+					index=getMinMatchIndex("t2_shotsOne");
+					cout<<games[index].dynamicGet("t2_shotsOne")<<" Shots | Game "<<index+1; setColor("RESET");
+				}
+				
+				cout<<endl;
+			}
+			
+			if(existKnownData("t1_shotsTwo") || existKnownData("t2_shotsTwo")){
+				cout<<endl; setColor("BOLDBLUE"); cout<<"Minimum On Target Shots:"; setColor("RESET");
+				
+				if(existKnownData("t1_shotsTwo")){
+					cout<<endl; setColor("BOLDMAGENTA"); cout<<teamOne.getName()<<": ";
+					index=getMinMatchIndex("t1_shotsTwo");
+					cout<<games[index].dynamicGet("t1_shotsTwo")<<" Shots | Game "<<index+1; setColor("RESET");
+				}
+				
+				if(existKnownData("t2_shotsTwo")){
+					cout<<endl; setColor("BOLDCYAN"); cout<<teamTwo.getName()<<": ";
+					index=getMinMatchIndex("t2_shotsTwo");
+					cout<<games[index].dynamicGet("t2_shotsTwo")<<" Shots | Game "<<index+1; setColor("RESET");
+				}
+				
+				cout<<endl;
+			}
+			
+			if(existKnownData("t1_possess") || existKnownData("t2_possess")){
+				cout<<endl; setColor("BOLDBLUE"); cout<<"Minimum Possession:"; setColor("RESET");
+				
+				if(existKnownData("t1_possess")){
+					cout<<endl; setColor("BOLDMAGENTA"); cout<<teamOne.getName()<<": ";
+					index=getMinMatchIndex("t1_possess");
+					cout<<games[index].dynamicGet("t1_possess")<<" % | Game "<<index+1; setColor("RESET");
+				}
+				
+				if(existKnownData("t2_possess")){
+					cout<<endl; setColor("BOLDCYAN"); cout<<teamTwo.getName()<<": ";
+					index=getMinMatchIndex("t2_possess");
+					cout<<games[index].dynamicGet("t2_possess")<<" % | Game "<<index+1; setColor("RESET");
+				}
+				
+				cout<<endl;
+			}
+			
+			if(existKnownData("t1_pass_c") || existKnownData("t2_pass_c")){
+				cout<<endl; setColor("BOLDBLUE"); cout<<"Minimum Pass Completed:"; setColor("RESET");
+				
+				if(existKnownData("t1_pass_c")){
+					cout<<endl; setColor("BOLDMAGENTA"); cout<<teamOne.getName()<<": ";
+					index=getMinMatchIndex("t1_pass_c");
+					cout<<games[index].dynamicGet("t1_pass_c")<<" % | Game "<<index+1; setColor("RESET");
+				}
+				
+				if(existKnownData("t2_pass_c")){
+					cout<<endl; setColor("BOLDCYAN"); cout<<teamTwo.getName()<<": ";
+					index=getMinMatchIndex("t2_pass_c");
+					cout<<games[index].dynamicGet("t2_pass_c")<<" % | Game "<<index+1; setColor("RESET");
+				}
+				
+				cout<<endl;
+			}
+			
+			if(existKnownData("t1_interc") || existKnownData("t2_interc")){
+				cout<<endl; setColor("BOLDBLUE"); cout<<"Minimum Interception:"; setColor("RESET");
+				
+				if(existKnownData("t1_interc")){
+					cout<<endl; setColor("BOLDMAGENTA"); cout<<teamOne.getName()<<": ";
+					index=getMinMatchIndex("t1_interc");
+					cout<<games[index].dynamicGet("t1_interc")<<" | Game "<<index+1; setColor("RESET");
+				}
+				
+				if(existKnownData("t2_interc")){
+					cout<<endl; setColor("BOLDCYAN"); cout<<teamTwo.getName()<<": ";
+					index=getMinMatchIndex("t2_interc");
+					cout<<games[index].dynamicGet("t2_interc")<<" | Game "<<index+1; setColor("RESET");
+				}
+				
+				cout<<endl;
+			}
+			
+			if(existKnownData("t1_saves") || existKnownData("t2_saves")){
+				cout<<endl; setColor("BOLDBLUE"); cout<<"Minimum Saves:"; setColor("RESET");
+				
+				if(existKnownData("t1_saves")){
+					cout<<endl; setColor("BOLDMAGENTA"); cout<<teamOne.getName()<<": ";
+					index=getMinMatchIndex("t1_saves");
+					cout<<games[index].dynamicGet("t1_saves")<<" | Game "<<index+1; setColor("RESET");
+				}
+				
+				if(existKnownData("t2_saves")){
+					cout<<endl; setColor("BOLDCYAN"); cout<<teamTwo.getName()<<": ";
+					index=getMinMatchIndex("t2_saves");
+					cout<<games[index].dynamicGet("t2_saves")<<" | Game "<<index+1; setColor("RESET");
+				}
+				
+				cout<<endl;
+			}
+			
+			if(existKnownData("t1_cross") || existKnownData("t2_cross")){
+				cout<<endl; setColor("BOLDBLUE"); cout<<"Minimum Crosses:"; setColor("RESET");
+				
+				if(existKnownData("t1_cross")){
+					cout<<endl; setColor("BOLDMAGENTA"); cout<<teamOne.getName()<<": ";
+					index=getMinMatchIndex("t1_cross");
+					cout<<games[index].dynamicGet("t1_cross")<<" | Game "<<index+1; setColor("RESET");
+				}
+				
+				if(existKnownData("t2_cross")){
+					cout<<endl; setColor("BOLDCYAN"); cout<<teamTwo.getName()<<": ";
+					index=getMinMatchIndex("t2_cross");
+					cout<<games[index].dynamicGet("t2_cross")<<" | Game "<<index+1; setColor("RESET");
+				}
+				
+				cout<<endl;
+			}
+			
+			if(existKnownData("t1_corners") || existKnownData("t2_corners")){
+				cout<<endl; setColor("BOLDBLUE"); cout<<"Minimum Corners:"; setColor("RESET");
+				
+				if(existKnownData("t1_corners")){
+					cout<<endl; setColor("BOLDMAGENTA"); cout<<teamOne.getName()<<": ";
+					index=getMinMatchIndex("t1_corners");
+					cout<<games[index].dynamicGet("t1_corners")<<" | Game "<<index+1; setColor("RESET");
+				}
+				
+				if(existKnownData("t2_corners")){
+					cout<<endl; setColor("BOLDCYAN"); cout<<teamTwo.getName()<<": ";
+					index=getMinMatchIndex("t2_corners");
+					cout<<games[index].dynamicGet("t2_corners")<<" | Game "<<index+1; setColor("RESET");
+				}
+				
+				cout<<endl;
+			}
+			
+			if(existKnownData("t1_fk") || existKnownData("t2_fk")){
+				cout<<endl; setColor("BOLDBLUE"); cout<<"Minimum Free Kick:"; setColor("RESET");
+				
+				if(existKnownData("t1_fk")){
+					cout<<endl; setColor("BOLDMAGENTA"); cout<<teamOne.getName()<<": ";
+					index=getMinMatchIndex("t1_fk");
+					cout<<games[index].dynamicGet("t1_fk")<<" | Game "<<index+1; setColor("RESET");
+				}
+				
+				if(existKnownData("t2_fk")){
+					cout<<endl; setColor("BOLDCYAN"); cout<<teamTwo.getName()<<": ";
+					index=getMinMatchIndex("t2_fk");
+					cout<<games[index].dynamicGet("t2_fk")<<" | Game "<<index+1; setColor("RESET");
+				}
+				
+				cout<<endl;
+			}
+			
+			if(existKnownData("t1_foulsOne") || existKnownData("t2_foulsOne")){
+				cout<<endl; setColor("BOLDBLUE"); cout<<"Minimum Fouls:"; setColor("RESET");
+				
+				if(existKnownData("t1_foulsOne")){
+					cout<<endl; setColor("BOLDMAGENTA"); cout<<teamOne.getName()<<": ";
+					index=getMinMatchIndex("t1_foulsOne");
+					cout<<games[index].dynamicGet("t1_foulsOne")<<" | Game "<<index+1; setColor("RESET");
+				}
+				
+				if(existKnownData("t2_foulsOne")){
+					cout<<endl; setColor("BOLDCYAN"); cout<<teamTwo.getName()<<": ";
+					index=getMinMatchIndex("t2_foulsOne");
+					cout<<games[index].dynamicGet("t2_foulsOne")<<" | Game "<<index+1; setColor("RESET");
+				}
+				
+				cout<<endl;
+			}
+			
+			if(existKnownData("t1_flstrength",true) || existKnownData("t2_flstrength",true)){
+				cout<<endl; setColor("BOLDBLUE"); cout<<"Minimum First Line Up Strength:"; setColor("RESET");
+				
+				if(existKnownData("t1_flstrength",true)){
+					cout<<endl; setColor("BOLDMAGENTA"); cout<<teamOne.getName()<<": ";
+					index=getMinMatchIndex("t1_flstrength",true);
+					cout<<setprecision(3)<<games[index].doubleDynamicGet("t1_flstrength")<<" | Game "<<index+1; setColor("RESET");
+				}
+				
+				if(existKnownData("t2_flstrength",true)){
+					cout<<endl; setColor("BOLDCYAN"); cout<<teamTwo.getName()<<": ";
+					index=getMinMatchIndex("t2_flstrength",true);
+					cout<<setprecision(3)<<games[index].doubleDynamicGet("t2_flstrength")<<" | Game "<<index+1; setColor("RESET");
+				}
+				
+				cout<<endl;
+			}
+			
+			if(existKnownData("t1_strength",true) || existKnownData("t2_strength",true)){
+				cout<<endl; setColor("BOLDBLUE"); cout<<"Minimum Overall Line Up Strength:"; setColor("RESET");
+				
+				if(existKnownData("t1_strength",true)){
+					cout<<endl; setColor("BOLDMAGENTA"); cout<<teamOne.getName()<<": ";
+					index=getMinMatchIndex("t1_strength",true);
+					cout<<setprecision(3)<<games[index].doubleDynamicGet("t1_strength")<<" | Game "<<index+1; setColor("RESET");
+				}
+				
+				if(existKnownData("t2_strength",true)){
+					cout<<endl; setColor("BOLDCYAN"); cout<<teamTwo.getName()<<": ";
+					index=getMinMatchIndex("t2_strength",true);
+					cout<<setprecision(3)<<games[index].doubleDynamicGet("t2_strength")<<" | Game "<<index+1; setColor("RESET");
+				}
+				
+				cout<<endl;
+			}
+		}
+	}
+	
+	int getNumAbsValues(const char * factor,bool isDouble=false){
 		int num=0;
-		for (int i=0; games[i].sendexist(); i++){
-			if(games[i].dynamicGet(factor)!=-2) num++;
+		if(!isDouble){
+			for (int i=0; games[i].sendexist(); i++){
+				if(games[i].dynamicGet(factor)>=0) num++;
+			}
+		}
+		else {
+			for (int i=0; games[i].sendexist(); i++){
+				if(games[i].doubleDynamicGet(factor)>=0) num++;
+			}
 		}
 		return num;
 	}
 	
-	int getSumValues(const char * factor){
-		int sum=0;
-		for (int i=0; games[i].sendexist(); i++){
-			if(games[i].dynamicGet(factor)!=-2) sum+=games[i].dynamicGet(factor);
+	int getSumValues(const char * factor,bool isDouble=false){
+		if(!isDouble){
+			int sum=0;
+			for (int i=0; games[i].sendexist(); i++){
+				if(games[i].dynamicGet(factor)>=0) sum+=games[i].dynamicGet(factor);
+			}
+			return sum;
 		}
-		return sum;
+		else{
+			double sum=0;
+			for (int i=0; games[i].sendexist(); i++){
+				if(games[i].doubleDynamicGet(factor)>=0) sum+=games[i].doubleDynamicGet(factor);
+			}
+			return sum;
+		}
 	}
 	
 	void compare(double m1,double m2,int s,int h=0){
@@ -750,7 +1129,7 @@ class competition{
 		for(int i=0; t2Star>i; i++) cout<<"*";
 	}
 	
-	void printCompareFromFactors(const char*title,const char *t1_factor, const char *t2_factor,int s, int nStar,int valueLen,stringstream &cadr,bool printPH=false, bool fewBetter=false){
+	void printCompareFromFactors(const char*title,const char *t1_factor, const char *t2_factor,int s, int nStar,int valueLen,stringstream &cadr,int prec=2,bool printPH=false, bool fewBetter=false,bool isDouble=false){
 		stringstream t1SS,t2SS;
 		int t1Sum,t2Sum;
 		double t1Avg,t2Avg;
@@ -758,7 +1137,23 @@ class competition{
 		if(strcmp(title,"Wins")==0){
 			t1Avg=teamOne.getWins();
 			t2Avg=teamTwo.getWins();
-		}		
+		}
+		
+		else if(isDouble){
+			double sum1,sum2;
+			if(existKnownData(t1_factor,true)){
+				sum1=getSumValues(t1_factor,true);
+				t1Avg=(double)sum1/getNumAbsValues(t1_factor,true);
+			}
+			else t1Avg=-2;
+			
+			if(existKnownData(t2_factor,true)){
+				sum2=getSumValues(t2_factor,true);
+				t2Avg=(double)sum2/getNumAbsValues(t2_factor,true);
+			}
+			else t2Avg=-2;
+		}
+		
 		else{
 			if(existKnownData(t1_factor)){
 				t1Sum=getSumValues(t1_factor);
@@ -782,20 +1177,20 @@ class competition{
 		if(!UKOne && !UKTwo){
 			if((!fewBetter && t1Avg>t2Avg) || (fewBetter && t1Avg<t2Avg)) t1SS<<"$$GRN";
 			else if((!fewBetter && t2Avg>t1Avg) || (fewBetter && t2Avg<t1Avg)) t2SS<<"$$GRN";
-			t1SS<<setprecision(2)<<t1Avg;
-			t2SS<<setprecision(2)<<t2Avg;
+			t1SS<<setprecision(prec)<<t1Avg;
+			t2SS<<setprecision(prec)<<t2Avg;
 			if(printPH){
 				t1SS<<"%";
 				t2SS<<"%";
 			}
 		}
 		else if(!UKOne){
-			t1SS<<setprecision(2)<<t1Avg;
+			t1SS<<setprecision(prec)<<t1Avg;
 			if(printPH) t1SS<<"%";
 		}
 		
 		else if(!UKTwo){
-			t2SS<<setprecision(2)<<t1Avg;
+			t2SS<<setprecision(prec)<<t1Avg;
 			if(printPH) t2SS<<"%";
 		}
 		
@@ -823,6 +1218,9 @@ class competition{
 		bool exLeft=(existKnownData("t1_left") || existKnownData("t2_left"));
 		bool exCenter=(existKnownData("t1_center") || existKnownData("t2_right"));
 		bool exRight=(existKnownData("t1_center") || existKnownData("t2_right"));
+		
+		bool exFLStrength=(existKnownData("t1_flstrength",true) || existKnownData("t2_flstrength",true));
+		bool exStrength=(existKnownData("t1_strength",true) || existKnownData("t2_strength",true));
 		
 		cout<<endl;
 		int s=10;
@@ -857,16 +1255,16 @@ class competition{
 		space(s); ccsPrint(cadr); cadr_dash(maxLength); setColor("RESET");
 		
 		printCompareFromFactors("Goals","t1_goals","t2_goals",s,nStar,valueLen,cadr); cout<<endl;
-		if(exYTCards){ printCompareFromFactors("Yellow Cards","t1YC","t2YC",s,nStar,valueLen,cadr,false,true); cout<<endl;}
-		if(exRTCards){ printCompareFromFactors("Red Cards","t1RC","t2RC",s,nStar,valueLen,cadr,false,true); cout<<endl;}
-		if(exPossess){ printCompareFromFactors("Possession","t1_possess","t2_possess",s,nStar,valueLen,cadr,true); cout<<endl;}
+		if(exYTCards){ printCompareFromFactors("Yellow Cards","t1YC","t2YC",s,nStar,valueLen,cadr,2,false,true); cout<<endl;}
+		if(exRTCards){ printCompareFromFactors("Red Cards","t1RC","t2RC",s,nStar,valueLen,cadr,2,false,true); cout<<endl;}
+		if(exPossess){ printCompareFromFactors("Possession","t1_possess","t2_possess",s,nStar,valueLen,cadr,2,true); cout<<endl;}
 		if(exShotsOne){ printCompareFromFactors("Shots","t1_shotsOne","t2_shotsOne",s,nStar,valueLen,cadr); cout<<endl;}
 		if(exShotsTwo){ printCompareFromFactors("Shots (On Target)","t1_shotsTwo","t2_shotsTwo",s,nStar,valueLen,cadr); cout<<endl;}
-		if(exFoulsOne){ printCompareFromFactors("Fouls","t1_foulsOne","t2_foulsOne",s,nStar,valueLen,cadr,false,true); cout<<endl;}
-		if(exFoulsTwo){ printCompareFromFactors("Offside","t1_foulsTwo","t2_foulsTwo",s,nStar,valueLen,cadr,false,true); cout<<endl;}
+		if(exFoulsOne){ printCompareFromFactors("Fouls","t1_foulsOne","t2_foulsOne",s,nStar,valueLen,cadr,2,false,true); cout<<endl;}
+		if(exFoulsTwo){ printCompareFromFactors("Offside","t1_foulsTwo","t2_foulsTwo",s,nStar,valueLen,cadr,2,false,true); cout<<endl;}
 		if(exCorners){ printCompareFromFactors("Corners","t1_corners","t2_corners",s,nStar,valueLen,cadr); cout<<endl;}
 		if(exFk){ printCompareFromFactors("Free Kick","t1_fk","t2_fk",s,nStar,valueLen,cadr); cout<<endl;}
-		if(exPassC){ printCompareFromFactors("Pass Completed","t1_pass_c","t2_pass_c",s,nStar,valueLen,cadr,true); cout<<endl;}
+		if(exPassC){ printCompareFromFactors("Pass Completed","t1_pass_c","t2_pass_c",s,nStar,valueLen,cadr,2,true); cout<<endl;}
 		if(exCross){ printCompareFromFactors("Crosses","t1_cross","t2_cross",s,nStar,valueLen,cadr); cout<<endl;}
 		if(exInterc){ printCompareFromFactors("Interception","t1_interc","t2_interc",s,nStar,valueLen,cadr); cout<<endl;}
 		if(exTackles){ printCompareFromFactors("Tackles","t1_tackles","t2_tackles",s,nStar,valueLen,cadr); cout<<endl;}
@@ -880,9 +1278,21 @@ class competition{
 			temp<<"$$RED"<<"Attacink Areas (Per Game)"<<"$0RST";
 			space(s); strwhere(temp,maxLength); cout<<endl;
 			space(s); ccsPrint(cadr); cadr_dash(maxLength); setColor("RESET");
-			if(exLeft){ printCompareFromFactors("Left","t1_left","t2_left",s,nStar,valueLen,cadr,true); cout<<endl;}
-			if(exCenter){ printCompareFromFactors("Center","t1_center","t2_center",s,nStar,valueLen,cadr,true); cout<<endl;}
-			if(exRight){ printCompareFromFactors("Right","t1_right","t2_right",s,nStar,valueLen,cadr,true); cout<<endl;}
+			if(exLeft){ printCompareFromFactors("Left","t1_left","t2_left",s,nStar,valueLen,cadr,2,true); cout<<endl;}
+			if(exCenter){ printCompareFromFactors("Center","t1_center","t2_center",s,nStar,valueLen,cadr,2,true); cout<<endl;}
+			if(exRight){ printCompareFromFactors("Right","t1_right","t2_right",s,nStar,valueLen,cadr,2,true); cout<<endl;}
+			
+			space(s); setColor("BOLDBLUE"); cadr_dash(maxLength); setColor("RESET");
+		}
+		
+		if(exFLStrength || exStrength){
+			cout<<endl;
+			temp.str("");
+			temp<<"$$RED"<<"Team Strength (Per Game)"<<"$0RST";
+			space(s); strwhere(temp,maxLength); cout<<endl;
+			space(s); ccsPrint(cadr); cadr_dash(maxLength); setColor("RESET");
+			if(exFLStrength){ printCompareFromFactors("FL Strength","t1_flstrength","t2_flstrength",s,nStar,valueLen,cadr,3,false,false,true); cout<<endl;}
+			if(exStrength){ printCompareFromFactors("Overall Strength","t1_strength","t2_strength",s,nStar,valueLen,cadr,3,false,false,true); cout<<endl;}
 			
 			space(s); setColor("BOLDBLUE"); cadr_dash(maxLength); setColor("RESET");
 		}
@@ -980,19 +1390,19 @@ class competition{
 				case 3: setColor("BOLDWHITE"); break;
 			}
 			if(i<9) cout<<"0";
-			cout<<i+1; setColor("BOLDBLACK"); cout<<" | ";
+			cout<<i+1; setColor("BOLDBLACK"); cout<<" | "; setColor("RESET");
 		}
 		cout<<endl<<endl;
 		
 		for(int i=0; games[i].sendexist() && 200>i; i++){
-			if(i/10*10==i){ cout<<endl<<"| "; setColor("RESET");}
+			if(i/10*10==i){ setColor("BOLDBLACK"); cout<<endl<<"| "; setColor("RESET");}
 			switch(games[i].dynamicGet("res")){
 				case 1: setColor("BOLDMAGENTA"); break;
 				case 2: setColor("BOLDCYAN"); break;
 				case 3: setColor("BOLDWHITE"); break;
 			}
 			cout<<games[i].dynamicGet("t1_goals")<<"-"<<games[i].dynamicGet("t2_goals");
-			cout<<" | ";
+			setColor("BOLDBLACK"); cout<<" | "; setColor("RESET");
 		}
 		cout<<endl;
 	}

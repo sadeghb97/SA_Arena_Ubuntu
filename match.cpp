@@ -1143,6 +1143,7 @@ void match::update_after_game(team &tm1,team &tm2,bool silent){
 
 void match::show(team tm1,team tm2){
 	int s,t,c;
+	int maxLength;
     const int scrLength=78;
     stringstream temp1;
 	stringstream ts1[14];
@@ -1153,6 +1154,7 @@ void match::show(team tm1,team tm2){
 	stringstream att2[3];
 	stringstream cadr;
 	stringstream ov1,ov2;
+	stringstream ovf1,ovf2;
 	
 	bool pPossess=(t1_possess!=-2 || t2_possess!=-2);
 	bool pShots=(t1_shots[0]!=-2 || t2_shots[0]!=-2);
@@ -1274,20 +1276,32 @@ void match::show(team tm1,team tm2){
 			}
 		}
 		
+		double t1FirstStrength=getTeamFirstStrength(tm1);
+		double t2FirstStrength=getTeamFirstStrength(tm2);
 		double t1Strength=getTeamStrength(tm1);
 		double t2Strength=getTeamStrength(tm2);
+		
+		if(t1FirstStrength!=-2) ovf1<<"FL Strength: "<<player::getOverallString(t1FirstStrength);
+		else ovf1<<"FL Strength: "<<player::getOverallString(-2);
+		
+		if(t2FirstStrength!=-2) ovf2<<"FL Strength: "<<player::getOverallString(t2FirstStrength);
+		else ovf2<<"FL Strength: "<<player::getOverallString(-2);
 
-		if(t1Strength!=-1) ov1<<"Strength: "<<player::getOverallString(t1Strength);
+		if(t1Strength!=-2) ov1<<"Strength: "<<player::getOverallString(t1Strength);
 		else ov1<<"Strength: "<<player::getOverallString(-2);
 		
-		if(t2Strength!=-1) ov2<<"Strength: "<<player::getOverallString(t2Strength);
+		if(t2Strength!=-2) ov2<<"Strength: "<<player::getOverallString(t2Strength);
 		else ov2<<"Strength: "<<player::getOverallString(-2);
+		
+	
 		
 		cout<<endl<<endl;
 		setColor("BOLDBLUE"); beforeStrWhere("Players",scrLength); setColor("RESET");cout<<endl;
-		s=18;
-		space(s); ccsPrint(cadr); cadr_dash(42,true); setColor("RESET");cout<<endl;
-		t=20;
+		t=22; s=16;
+		maxLength=(t*2)+2;
+		
+		space(s); ccsPrint(cadr); cadr_dash(maxLength,true); setColor("RESET");cout<<endl;
+		
 		for(int i=0; 11>i; i++){
 			space(s); ccsPrint(cadr); cout<<"|"; setColor("RESET");
 			if(mom[0][1]==1 && mom[0][0]==t1_prs[i] && t1_prs[i]!=-2) setColor("BOLDYELLOW");
@@ -1298,7 +1312,7 @@ void match::show(team tm1,team tm2){
 			strwhere(ts2[i],t,1); setColor("RESET");
 			ccsPrint(cadr); cout<<"|"; setColor("RESET"); cout<<endl; 
 		}
-		space(s); ccsPrint(cadr); cadr_dash(42,true); setColor("RESET");cout<<endl;
+		space(s); ccsPrint(cadr); cadr_dash(maxLength,true); setColor("RESET");cout<<endl;
 		for(int i=11; 14>i; i++){
 			space(s); ccsPrint(cadr); cout<<"|"; setColor("RESET");
 			if(mom[0][1]==1 && mom[0][0]==t1_tvz[i-11] && t1_tvz[i-11]!=-2) setColor("BOLDYELLOW");
@@ -1309,12 +1323,17 @@ void match::show(team tm1,team tm2){
 			strwhere(ts2[i],t,1); setColor("RESET");
 			ccsPrint(cadr); cout<<"|"; setColor("RESET");cout<<endl;		
 		}
-		space(s); ccsPrint(cadr); cadr_dash(42,true); setColor("RESET");cout<<endl;
-		if(t1Strength!=-1 || t2Strength!=-1){
+		space(s); ccsPrint(cadr); cadr_dash(maxLength,true); setColor("RESET");cout<<endl;
+		if(t1FirstStrength!=-2 || t2FirstStrength!=-2){
+			space(s); ccsPrint(cadr); cout<<"|"; setColor("RESET");
+			strwhere(ovf1,t,1); strwhere(ovf2,t,1);
+			ccsPrint(cadr); cout<<"|"; setColor("RESET");cout<<endl;
+			
 			space(s); ccsPrint(cadr); cout<<"|"; setColor("RESET");
 			strwhere(ov1,t,1); strwhere(ov2,t,1);
 			ccsPrint(cadr); cout<<"|"; setColor("RESET");cout<<endl;
-			space(s); ccsPrint(cadr); cadr_dash(42,true); setColor("RESET");cout<<endl;
+			
+			space(s); ccsPrint(cadr); cadr_dash(maxLength,true); setColor("RESET");cout<<endl;
 		}
 	}
 	
@@ -1333,12 +1352,12 @@ void match::show(team tm1,team tm2){
 		}
 		cout<<endl<<endl;
 		setColor("BOLDBLUE"); beforeStrWhere("Goals",scrLength); setColor("RESET"); cout<<endl;
-		space(17); ccsPrint(cadr); cout<<"----------------------------------------------"; setColor("RESET");cout<<endl;
+		space(16); ccsPrint(cadr); cout<<"----------------------------------------------"; setColor("RESET");cout<<endl;
 		for(int i=0; tg>i; i++){
 			if(goals[i][0]==1){space(20); setColor("BOLDMAGENTA"); ccsPrint(gl[i]); setColor("RESET");cout<<endl;}
 			if(goals[i][0]==2){space(30); setColor("BOLDCYAN"); ccsPrint(gl[i]); setColor("RESET");cout<<endl;}
 		}
-		space(17); ccsPrint(cadr); cout<<"----------------------------------------------"; setColor("RESET");cout<<endl;
+		space(16); ccsPrint(cadr); cout<<"----------------------------------------------"; setColor("RESET");cout<<endl;
 	}
 	if(tcards>0 && cards[0][0]>0){
 		for(int i=0; tcards>i; i++){
@@ -1353,12 +1372,12 @@ void match::show(team tm1,team tm2){
 		}
 		cout<<endl<<endl;
 		setColor("BOLDBLUE"); beforeStrWhere("Cards",scrLength); setColor("RESET");cout<<endl;
-		space(17); ccsPrint(cadr); cout<<"----------------------------------------------"; setColor("RESET");cout<<endl;
+		space(16); ccsPrint(cadr); cout<<"----------------------------------------------"; setColor("RESET");cout<<endl;
 		for(int i=0; tcards>i; i++){
 			if(cards[i][0]==1){space(20); setColor("BOLDMAGENTA"); ccsPrint(cs[i]); setColor("RESET");cout<<endl;}
 			if(cards[i][0]==2){space(30); setColor("BOLDCYAN"); ccsPrint(cs[i]); setColor("RESET");cout<<endl;}
 		}					
-		space(17); ccsPrint(cadr); cout<<"----------------------------------------------"; setColor("RESET");cout<<endl;
+		space(16); ccsPrint(cadr); cout<<"----------------------------------------------"; setColor("RESET");cout<<endl;
                 
 	}
 	

@@ -34,6 +34,7 @@ void setColor(int,bool);
 void setColor(int);
 void setColor(const char *);
 bool randYesNo();
+int findIndexInIntArray(int,int *,int);
 
 class player;
 class team;
@@ -67,7 +68,7 @@ void externalShowAllPrs(const char*);
 int getNumGames(match *);
 void add_game(match *,team &,team &, inputProfile &);
 void editGame(match *,team &,team &);
-void showWALTable(teamGameStat, teamGameStat , bool, bool);
+void showWALTable(teamGameStat, teamGameStat , bool, bool, bool);
 void print_passage(char *);
 void details_repair(match *, team &,team &);
 void silentDetailsRepair(match *, team &,team &);
