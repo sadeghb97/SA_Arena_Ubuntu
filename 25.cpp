@@ -22,6 +22,10 @@
 using namespace std;
 int easycheck(int,int,int);
 int checkchoice(char[],int,int);
+int strlen(const char*);
+void strwhere(const char*,int,int);
+void space(int);
+void cadr_dash(int);
 stringstream temp1;
 stringstream temp2;
 stringstream temp3;
@@ -358,7 +362,6 @@ class match{
 		choice=checkchoice(temp,1,2);
 		if(choice==2) set_date();
 	}	
-	void set_result(team,team);
 	void set_goals(team,team);
 	void set_possess_shots(team,team);
 	void set_fouls_corners(team,team);
@@ -375,7 +378,6 @@ class match{
 	void set_conf(team,team);
 	void input_game(team tm1,team tm2){
 		set_date();
-		set_result(tm1,tm2);
 		set_goals(tm1,tm2);
 		set_possess_shots(tm1,tm2);
 		set_fouls_corners(tm1,tm2);
@@ -393,14 +395,15 @@ class match{
 		exist=1;
 		cout<<endl<<BOLDGREEN<<"Game Entered Succsessfuly.\n"<<RESET;
 	}
+	void show(team,team);
 	//void print_goals(team,team);
 	void update_after_game(team &,team &);
 	friend void add_game(match *,team &,team &);
 	//friend void print_all_goals(match *m,team tm1,team tm2);
 };
-
 void save(team,team, match *);
 void load(team &, team &, match *);
+int exist_players(int,int[],int[]);
 int menu(team,team);
 void team_manage(team &);
 void add_game(match *,team &,team &);
@@ -410,6 +413,7 @@ void details_repair(match *, team &,team &);
 void compare(team,team,double,double,int,int);
 void compare_teams(team,team);
 void subsume_players(team,team);
+void show_game(match *,team,team);
 void moratab(int[][3],int,int,int);
 //void print_all_goals(match *m,team tm1,team tm2);
 int main(){
@@ -444,7 +448,7 @@ int main(){
 			case 1: team_manage(t1); break;
 			case 2: team_manage(t2); break;		
 			case 3: add_game(game,t1,t2); break;
-			case 4: break;
+			case 4: show_game(game,t1,t2); break;
 			case 5: compare_teams(t1,t2); break;
 			case 6: subsume_players(t1,t2); break;
 			case 7: details_repair(game,t1,t2); break; 
@@ -454,6 +458,13 @@ int main(){
 		if(choice==10) break;
 	}
 	return 0;
+}
+void space(int s){
+	if(s>0) for(int i=0; s>i; i++) cout<<" ";
+}
+void cadr_dash(int tul){
+	for(int i=0; tul>i; i++) cout<<"-";
+	cout<<endl;
 }
 int checkchoice (char a[],int min,int max){
 	if (min<0) min=-1000;
@@ -487,7 +498,21 @@ void print_passage(char *p){
 		if(p[i]==95) cout<<space;
 		else cout<<p[i];
 	}
-} 
+}
+int strlen(const char *a){
+	int len;
+	for(len=0; a[len]; len++);
+	return len;
+}
+void strwhere(const char *a,int zarf,int halat=0){
+	int len=strlen(a);
+	int s=(zarf-len)/2;
+	if(halat==0) cout<<RESET;
+	for(int i=0; s>i; i++) cout<<" ";
+	cout<<a;
+	for(int i=0; s>i; i++) cout<<" ";
+	if((zarf-len)/2*2!=(zarf-len)) cout<<" ";
+}
 void save(team tm1,team tm2,match *m){
 	int choice;
 	char temp[10];
@@ -513,6 +538,7 @@ void load(team &tm1, team &tm2, match *m){
 }
 int menu(team t1,team t2){
 	char choice[10];
+	int c;
 	cout<<BOLDRED <<"\nMenu: \n" <<RESET;
 	cout<<"1: ";
 	t1.printname();
@@ -520,9 +546,10 @@ int menu(team t1,team t2){
 	t2.printname();
 	cout<<"\n3: Add match\n4: Show match\n5: Compare teams\n6: Subsume Players\n7: Repair details\n8: Save\n9: Load\n10: Exit\n";
 	cout<<"\nEnter your choice: \n";
-	scanf ("%s" ,choice);
-	while(checkchoice(choice,1,10)==-100) scanf("%s" ,choice);
-	return checkchoice(choice,1,10);
+	cin>>choice;
+	while(checkchoice(choice,1,10)==0) cin>>choice;
+	c=checkchoice(choice,1,10);
+	return c;
 }
 void team_manage(team &tm){
 	char temp[10];
@@ -543,21 +570,6 @@ void team_manage(team &tm){
 		if (choice==5) break;
 	}
 }
-void match::set_result(team tm1,team tm2){
-	int choice;
-	cout<<"\nEnter Result (1: "<<tm1.name<<" | 2: "<<tm2.name<<" | 3: Draw)"<<endl;
-	do cin>>temp; while(checkchoice(temp,1,3)==0);
-	res=checkchoice(temp,1,3);
-	cout<<endl<<BOLDBLUE;
-	if(res==3) cout<<"Result: Draw";
-	if(res==1) cout<<"Result: "<<tm1.name<<" wins the match";
-	if(res==2) cout<<"Result: "<<tm2.name<<" wins the match";
-	cout<<endl<<RESET;
-	cout<<endl<<"Do you want to edit? (1:No | 2:Yes)\n";
-	do cin>>temp; while(checkchoice(temp,1,2)==0);
-	choice=checkchoice(temp,1,2);
-	if(choice==2) set_result(tm1,tm2);
-}	
 void match::set_goals(team tm1,team tm2){
 	int choice,error=0;
 	cout<<"\nEnter Goals Respectively (According to ID)\n";
@@ -570,15 +582,18 @@ void match::set_goals(team tm1,team tm2){
 	if(error==1){
 		cout<<endl<<BOLDYELLOW<<"Error Dar Vared kardane goal ha. Try again.\n"<<RESET;
 		set_goals(tm1,tm2);
+		return;
 	}
 	cout<<endl<<"Do you want to edit? (1:No | 2:Yes)\n";
 	do cin>>temp; while(checkchoice(temp,1,2)==0);
 	choice=checkchoice(temp,1,2);
-	if(choice==2) set_goals(tm1,tm2);
+	if(choice==2){ set_goals(tm1,tm2); return;}
 	if(t1_goals<0 || t1_goals>20 || t2_goals<0 || t2_goals>20){
 		cout<<endl<<BOLDYELLOW<<"Error Dar tedade goal ha. Try Again\n"<<RESET;
 		set_goals(tm1,tm2);
+		return;
 	}
+	if(t1_goals>t2_goals) res=1; else if(t2_goals>t1_goals) res=2; else if(t1_goals==t2_goals) res=3;
 }
 void match::set_possess_shots(team tm1,team tm2){
 	int choice,error=0;
@@ -596,17 +611,19 @@ void match::set_possess_shots(team tm1,team tm2){
 	if(t1_shots[1]==-2) temp4<<"UK"; else if(t1_shots[1]<0){ temp4<<"Null"; error=1;} else if(t1_shots[1]>=0) temp4<<t1_shots[1];
 	if(t2_shots[0]==-2) temp5<<"UK"; else if(t2_shots[0]<0){ temp5<<"Null"; error=1;} else if(t2_shots[0]>=0) temp5<<t2_shots[0];
 	if(t2_shots[1]==-2) temp6<<"UK"; else if(t2_shots[1]<0){ temp6<<"Null"; error=1;} else if(t2_shots[1]>=0) temp6<<t2_shots[1];
+	if(t1_shots[0]<t1_shots[1] || t2_shots[0]<t2_shots[1]) error=1;
 	cout<<BOLDBLUE<<endl<<"Possession: "<<tm1.name<<": "<<temp1.str()<<" | "<<tm2.name<<": "<<temp2.str()<<endl;
 	cout<<"Shots (On Target): "<<tm1.name<<": "<<temp3.str()<<"("<<temp4.str()<<")"<<" | "<<tm2.name<<": "<<temp5.str()<<"("<<temp6.str()<<")"<<endl<<RESET;
-	if(t1_possess+t2_possess!=100){ cout<<endl<<BOLDYELLOW<<"Error In Possession\n"<<RESET<<endl; set_possess_shots(tm1,tm2);}
+	if(t1_possess+t2_possess!=100){ cout<<endl<<BOLDYELLOW<<"Error In Possession\n"<<RESET<<endl; set_possess_shots(tm1,tm2); return;}
 	if(error==1){
-		cout<<BOLDYELLOW<<"Error Dar Vared kardane Etelaat. Try again.\n"<<RESET;
+		cout<<endl<<BOLDYELLOW<<"Error Dar Vared kardane Etelaat. Try again.\n"<<RESET;
 		set_possess_shots(tm1,tm2);
+		return;
 	}
 	cout<<endl<<"Do you want to edit? (1:No | 2:Yes)\n";
 	do cin>>temp; while(checkchoice(temp,1,2)==0);
 	choice=checkchoice(temp,1,2);
-	if(choice==2) set_possess_shots(tm1,tm2);	
+	if(choice==2){ set_possess_shots(tm1,tm2); return;}	
 }
 void match::set_fouls_corners(team tm1,team tm2){
 	int choice,error=0;
@@ -629,11 +646,12 @@ void match::set_fouls_corners(team tm1,team tm2){
 	if(error==1){
 		cout<<endl<<BOLDYELLOW<<"Error Dar Vared kardane Etelaat. Try again.\n"<<RESET;
 		set_fouls_corners(tm1,tm2);
+		return;
 	}
 	cout<<endl<<"Do you want to edit? (1:No | 2:Yes)\n";
 	do cin>>temp; while(checkchoice(temp,1,2)==0);
 	choice=checkchoice(temp,1,2);
-	if(choice==2) set_fouls_corners(tm1,tm2);	
+	if(choice==2){ set_fouls_corners(tm1,tm2); return;}	
 }
 void match::set_fk_passc_cross(team tm1,team tm2){
 	int choice,error=0;
@@ -655,15 +673,16 @@ void match::set_fk_passc_cross(team tm1,team tm2){
 	cout<<BOLDBLUE<<endl<<"Freekicks: "<<tm1.name<<": "<<temp1.str()<<" | "<<tm2.name<<": "<<temp2.str()<<endl;
 	cout<<"Passess Completed: "<<tm1.name<<": "<<temp3.str()<<"% | "<<tm2.name<<": "<<temp4.str()<<"%"<<endl;
 	cout<<"Crossess: "<<tm1.name<<": "<<temp5.str()<<" | "<<tm2.name<<": "<<temp6.str()<<endl<<RESET;
-	if(t1_pass_c>100 || t2_pass_c>100){ cout<<BOLDYELLOW<<"Error In Passes Completed\n"<<endl<<RESET; set_fk_passc_cross(tm1,tm2);}
+	if(t1_pass_c>100 || t2_pass_c>100){ cout<<BOLDYELLOW<<"Error In Passes Completed\n"<<endl<<RESET; set_fk_passc_cross(tm1,tm2); return;}
 	if(error==1){
 		cout<<endl<<BOLDYELLOW<<"Error Dar Vared kardane Etelaat. Try again.\n"<<RESET;
 		set_fk_passc_cross(tm1,tm2);
+		return;
 	}
 	cout<<endl<<"Do you want to edit? (1:No | 2:Yes)\n";
 	do cin>>temp; while(checkchoice(temp,1,2)==0);
 	choice=checkchoice(temp,1,2);
-	if(choice==2) set_fk_passc_cross(tm1,tm2);	
+	if(choice==2){ set_fk_passc_cross(tm1,tm2); return;}	
 }
 void match::set_ic_tackle_save(team tm1,team tm2){
 	int choice,error=0;
@@ -688,11 +707,12 @@ void match::set_ic_tackle_save(team tm1,team tm2){
 	if(error==1){
 		cout<<endl<<BOLDYELLOW<<"Error Dar Vared kardane Etelaat. Try again.\n"<<RESET;
 		set_ic_tackle_save(tm1,tm2);
+		return;
 	}
 	cout<<endl<<"Do you want to edit? (1:No | 2:Yes)\n";
 	do cin>>temp; while(checkchoice(temp,1,2)==0);
 	choice=checkchoice(temp,1,2);
-	if(choice==2) set_ic_tackle_save(tm1,tm2);		
+	if(choice==2){ set_ic_tackle_save(tm1,tm2); return;}		
 }
 void match::set_tm1_first_lineup(team tm){
 	int choice,tp,j,error;
@@ -701,6 +721,9 @@ void match::set_tm1_first_lineup(team tm){
 	for(int i=0; 11>i; i++) cin>>t1_prs[i];
 	tm1players:
 	error=0;
+	for (int i=0; 10>i; i++){
+		if(t1_prs[i]!=-2) for(int j=i+1; 11>j; j++) if(t1_prs[i]==t1_prs[j]) error=1;
+	}
 	cout<<endl<<BOLDBLUE;
 	for(int i=0; 11>i; i++){
 		cout<<i+1<<": ";
@@ -724,6 +747,7 @@ void match::set_tm1_first_lineup(team tm){
 	if(error==1){
 		cout<<endl<<BOLDYELLOW<<"Error Dar Vared kardane Etelaat. ID ha ra az ebteda vared konid.\n"<<RESET;
 		set_tm1_first_lineup(tm);
+		return;
 	}
 }
 void match::set_tm2_first_lineup(team tm){
@@ -733,6 +757,9 @@ void match::set_tm2_first_lineup(team tm){
 	for(int i=0; 11>i; i++) cin>>t2_prs[i];
 	tm2players:
 	error=0;
+	for (int i=0; 10>i; i++){
+		if(t2_prs[i]!=-2) for(int j=i+1; 11>j; j++) if(t2_prs[i]==t2_prs[j]) error=1;
+	}
 	cout<<endl<<BOLDBLUE;
 	for(int i=0; 11>i; i++){
 		cout<<i+1<<": ";
@@ -756,6 +783,7 @@ void match::set_tm2_first_lineup(team tm){
 	if(error==1){
 		cout<<endl<<BOLDYELLOW<<"Error Dar Vared kardane Etelaat. ID ha ra az ebteda vared konid.\n"<<RESET;
 		set_tm2_first_lineup(tm);
+		return;
 	}
 }
 void match::set_tedad_taviz(team tm1,team tm2){
@@ -770,10 +798,11 @@ void match::set_tedad_taviz(team tm1,team tm2){
 	cout<<endl<<"Do you want to edit? (1:No | 2:Yes)\n";
 	do cin>>temp; while(checkchoice(temp,1,2)==0);
 	choice=checkchoice(temp,1,2);
-	if(choice==2) set_tedad_taviz(tm1,tm2);
+	if(choice==2){ set_tedad_taviz(tm1,tm2); return;}
 	if((easycheck(t1_tt,0,3)==0 && t1_tt!=-2) || (easycheck(t2_tt,0,3)==0 && t2_tt!=-2)){
 		cout<<BOLDYELLOW<<endl<<"Error Dar Tedade Taviz Ha. Try Again.\n"<<RESET;
 		set_tedad_taviz(tm1,tm2);
+		return;
 	}
 }
 void match::set_tvz_lineup(team tm1,team tm2){
@@ -787,6 +816,7 @@ void match::set_tvz_lineup(team tm1,team tm2){
 			for(int i=0; 3>i; i++) t1_tvz[i]=-1;
 			break;
 		}
+		for(int i=0; 3-t1_tt>i; i++) t1_tvz[2-i]=-1;
 		tm1_tvz_prs_inp:
 		for(tp1=0; tm1.pr[tp1].sendexist(); tp1++);
 		cout<<"\nBazikonane taviziye "<<tm1.name<<":\n";
@@ -794,6 +824,12 @@ void match::set_tvz_lineup(team tm1,team tm2){
 		for(int i=0; t1_tt>i; i++) cin>>t1_tvz[i];
 		tm1_tvz_prs:
 		error=0;
+		for (int i=0; 3>i; i++){
+			if(t1_tvz[i]!=-2 && t1_tvz[i]!=-1){
+				for(int j=0; 11>j; j++) if(t1_tvz[i]==t1_prs[j]) error=1;
+				for(int j=i+1; 3>j; j++) if(t1_tvz[i]==t1_tvz[j]) error=1;
+			}
+		}
 		cout<<endl<<BOLDBLUE;
 		for(int i=0; t1_tt>i; i++){
 			cout<<i+1<<": ";
@@ -818,7 +854,6 @@ void match::set_tvz_lineup(team tm1,team tm2){
 			cout<<endl<<BOLDYELLOW<<"Error Dar Vared kardane Etelaat. ID ha ra az ebteda vared konid.\n"<<RESET;
 			goto tm1_tvz_prs_inp;
 		}
-		for(int i=0; 3-t1_tt>i; i++) t1_tvz[2-i]=-1;
 		break;
 	}
 	while(2){
@@ -830,6 +865,7 @@ void match::set_tvz_lineup(team tm1,team tm2){
 			for(int i=1; 3>i; i++) t2_tvz[i]=-1;
 			break;
 		}
+		for(int i=0; 3-t2_tt>i; i++) t2_tvz[2-i]=-1;
 		tm2_tvz_prs_inp:
 		for(tp2=0; tm2.pr[tp2].sendexist(); tp2++);
 		cout<<"\nBazikonane taviziye "<<tm2.name<<":\n";
@@ -837,6 +873,12 @@ void match::set_tvz_lineup(team tm1,team tm2){
 		for(int i=0; t2_tt>i; i++) cin>>t2_tvz[i];
 		tm2_tvz_prs:
 		error=0;
+		for (int i=0; 3>i; i++){
+			if(t2_tvz[i]!=-2 && t2_tvz[i]!=-1){
+				for(int j=0; 11>j; j++) if(t2_tvz[i]==t2_prs[j]) error=1;
+				for(int j=i+1; 3>j; j++) if(t2_tvz[i]==t2_tvz[j]) error=1;
+			}
+		}
 		cout<<endl<<BOLDBLUE;
 		for(int i=0; t2_tt>i; i++){
 			cout<<i+1<<": ";
@@ -861,12 +903,17 @@ void match::set_tvz_lineup(team tm1,team tm2){
 			cout<<endl<<BOLDYELLOW<<"Error Dar Vared kardane Etelaat. ID ha ra az ebteda vared konid.\n"<<RESET;
 			goto tm2_tvz_prs_inp;
 		}
-		for(int i=0; 3-t2_tt>i; i++) t2_tvz[2-i]=-1;
 		break;
 	}
 }
+int exist_players(int input,int first[],int tvz[]){
+	for(int i=0; 11>i; i++) if(first[i]==-2 || first[i]==input) return 1;
+	for(int i=0; 3>i; i++) if(tvz[i]==-2 || tvz[i]==input) return 1;
+	return 0;
+}
 void match::set_goals_scorers(team tm1,team tm2){
 	int choice, j, tp1, tp2, error,bar,inpg1,inpg2;
+	int warning_hm[30];
 	for(tp1=0; tm1.pr[tp1].sendexist(); tp1++);
 	for(tp2=0; tm2.pr[tp2].sendexist(); tp2++);
 	while(1){
@@ -889,27 +936,35 @@ void match::set_goals_scorers(team tm1,team tm2){
 			do{
 				bar++;
 				error=0;
+				warning_hm[i]=0;
 				if(bar>1) cout<<endl<<BOLDYELLOW<<"Error dar vared kardane goal. Try Again.\n\n"<<RESET;
 				cin>>goals[i][0]>>goals[i][1]>>goals[i][2]>>goals[i][3]>>goals[i][4];
+				/*if(goals[i][0]==-2){
+					goals[i][1]=-2; goals[i][2]=-2; goals[i][3]=-2; goals[i][4]=-2;
+					break;
+				}*/
 				if(easycheck(goals[i][0],1,2)==0) error=1;
 				if(easycheck(goals[i][1],1,2)==0 && goals[i][1]!=-2) error=1;
 				if(error==0){
-					if(goals[i][0]==1){ if(easycheck(goals[i][2],1,tp1)==0 && goals[i][2]!=-2) error=1;}
-					else if(goals[i][0]==2){ if(easycheck(goals[i][2],1,tp2)==0 && goals[i][2]!=-2) error=1;}
+					if(goals[i][0]==1){ if(easycheck(goals[i][2],1,tp1)==0 && goals[i][2]!=-2) error=1; else if(exist_players(goals[i][2],t1_prs,t1_tvz)==0) error=1;}
+					else if(goals[i][0]==2){ if(easycheck(goals[i][2],1,tp2)==0 && goals[i][2]!=-2) error=1; else if(exist_players(goals[i][2],t2_prs,t2_tvz)==0) error=1;}
 				}
 				if(error==0){
-					if(goals[i][0]==1){ if(easycheck(goals[i][3],1,tp1)==0 && goals[i][3]!=-2 && goals[i][3]!=-1) error=1;}
-					else if(goals[i][0]==2){ if(easycheck(goals[i][3],1,tp2)==0 && goals[i][3]!=-2 && goals[i][3]!=-1) error=1;}
+					if(goals[i][0]==1){ if(easycheck(goals[i][3],1,tp1)==0 && goals[i][3]!=-2 && goals[i][3]!=-1) error=1; else if(exist_players(goals[i][3],t1_prs,t1_tvz)==0) error=1;}
+					else if(goals[i][0]==2){ if(easycheck(goals[i][3],1,tp2)==0 && goals[i][3]!=-2 && goals[i][3]!=-1) error=1; else if(exist_players(goals[i][3],t2_prs,t2_tvz)==0) error=1;}
 					if(goals[i][3]==goals[i][2]) error=1;
 				}
-				if(goals[i][4]<0 || goals[i][4]>110) error=1;
+				if(goals[i][4]<0 || goals[i][4]>105) error=1;
 				if(goals[i][1]==2 && goals[i][4]<45) error=1;
+				if(goals[i][1]==1 && goals[i][4]>60) error=1;
+				if(goals[i][1]==1 && goals[i][4]>45) warning_hm[i]=1;
 			} while	(error==1);
 			temp1.str("");
 			temp2.str("");
 			temp3.str("");
 			temp4.str("");
 			temp5.str("");
+			temp6.str("");
 			cout<<"Goal "<<i+1<<": ";
 			if(goals[i][0]==1) temp1<<tm1.name; else if(goals[i][0]==2) temp1<<tm2.name;
 			if(goals[i][1]==1) temp2<<"First Half"; else if(goals[i][1]==2) temp2<<"Second Half"; else if(goals[i][0]==-2) temp2<<"UK";
@@ -921,7 +976,10 @@ void match::set_goals_scorers(team tm1,team tm2){
 			else if(goals[i][0]==1) temp4<<tm1.pr[goals[i][3]-1].name;
 			else if(goals[i][0]==2) temp4<<tm2.pr[goals[i][3]-1].name;
 			if(goals[i][4]==-2) temp5<<"UK"; else temp5<<goals[i][4];
-			cout<<temp1.str()<<" | "<<temp2.str()<<" | "<<temp3.str()<<" | "<<temp4.str()<<" | "<<temp5.str()<<endl;
+			if(warning_hm[i]==1) temp6<<BOLDYELLOW<<"Warning: H&M"<<RESET;
+			cout<<temp1.str()<<" | "<<temp2.str()<<" | "<<temp3.str()<<" | "<<temp4.str()<<" | "<<temp5.str();
+			if(warning_hm[i]==1) cout<<" | "<<temp6.str();
+			cout<<endl;
 		}
 		chapgoals:
 		cout<<endl<<BOLDBLUE<<"All Goals: \n";
@@ -931,6 +989,7 @@ void match::set_goals_scorers(team tm1,team tm2){
 			temp3.str("");
 			temp4.str("");
 			temp5.str("");
+			temp6.str("");
 			cout<<"Goal "<<i+1<<": ";
 			if(goals[i][0]==1) temp1<<tm1.name; else if(goals[i][0]==2) temp1<<tm2.name;
 			if(goals[i][1]==1) temp2<<"First Half"; else if(goals[i][1]==2) temp2<<"Second Half"; else if(goals[i][0]==-2) temp2<<"UK";
@@ -942,7 +1001,10 @@ void match::set_goals_scorers(team tm1,team tm2){
 			else if(goals[i][0]==1) temp4<<tm1.pr[goals[i][3]-1].name;
 			else if(goals[i][0]==2) temp4<<tm2.pr[goals[i][3]-1].name;
 			if(goals[i][4]==-2) temp5<<"UK"; else temp5<<goals[i][4];
-			cout<<temp1.str()<<" | "<<temp2.str()<<" | "<<temp3.str()<<" | "<<temp4.str()<<" | "<<temp5.str()<<endl;	
+			if(warning_hm[i]==1) temp6<<BOLDYELLOW<<"Warning: H&M"<<RESET;	
+			cout<<temp1.str()<<" | "<<temp2.str()<<" | "<<temp3.str()<<" | "<<temp4.str()<<" | "<<temp5.str();
+			if(warning_hm[i]==1) cout<<" | "<<temp6.str();
+			cout<<endl;
 		}
 		cout<<RESET<<endl;
 		inpg1=0; inpg2=0;
@@ -963,21 +1025,24 @@ void match::set_goals_scorers(team tm1,team tm2){
 			do{
 				bar++;
 				error=0;
+				warning_hm[j]=0;
 				if(bar>1) cout<<endl<<BOLDYELLOW<<"Error dar vared kardane goal. Try Again.\n\n"<<RESET;
 				cin>>goals[j][0]>>goals[j][1]>>goals[j][2]>>goals[j][3]>>goals[j][4];
 				if(easycheck(goals[j][0],1,2)==0) error=1;
 				if(easycheck(goals[j][1],1,2)==0 && goals[j][1]!=-2) error=1;
 				if(error==0){
-					if(goals[j][0]==1){ if(easycheck(goals[j][2],1,tp1)==0 && goals[j][2]!=-2) error=1;}
-					else if(goals[j][0]==2){ if(easycheck(goals[j][2],1,tp2)==0 && goals[j][2]!=-2) error=1;}
+					if(goals[j][0]==1){ if(easycheck(goals[j][2],1,tp1)==0 && goals[j][2]!=-2) error=1; else if(exist_players(goals[j][2],t1_prs,t1_tvz)==0) error=1;}
+					else if(goals[j][0]==2){ if(easycheck(goals[j][2],1,tp2)==0 && goals[j][2]!=-2) error=1; else if(exist_players(goals[j][2],t2_prs,t2_tvz)==0) error=1;}
 				}
 				if(error==0){
-					if(goals[j][0]==1){ if(easycheck(goals[j][3],1,tp1)==0 && goals[j][3]!=-2 && goals[j][3]!=-1) error=1;}
-					else if(goals[j][0]==2){ if(easycheck(goals[j][3],1,tp2)==0 && goals[j][3]!=-2 && goals[j][3]!=-1) error=1;}
+					if(goals[j][0]==1){ if(easycheck(goals[j][3],1,tp1)==0 && goals[j][3]!=-2 && goals[j][3]!=-1) error=1; else if(exist_players(goals[j][3],t1_prs,t1_tvz)==0) error=1;}
+					else if(goals[j][0]==2){ if(easycheck(goals[j][3],1,tp2)==0 && goals[j][3]!=-2 && goals[j][3]!=-1) error=1; else if(exist_players(goals[j][3],t2_prs,t2_tvz)==0) error=1;}
 					if(goals[j][3]==goals[j][2]) error=1;
 				}
-				if(goals[j][4]<0 || goals[j][4]>110) error=1;
+				if(goals[j][4]<0 || goals[j][4]>105) error=1;
 				if(goals[j][1]==2 && goals[j][4]<45) error=1;
+				if(goals[j][1]==1 && goals[j][4]>60) error=1;
+				if(goals[j][1]==1 && goals[j][4]>45) warning_hm[j]=1;
 			} while	(error==1);
 			goto chapgoals;
 		}
@@ -1006,17 +1071,19 @@ void match::set_tcards(team tm1,team tm2){
 	if(error==1){
 		cout<<endl<<BOLDYELLOW<<"Error!!! Adade vared shode Na motabarand. Try again.\n"<<RESET;
 		set_tcards(tm1,tm2);
+		return;
 	}
 	cout<<endl<<"Do you want to edit? (1:No | 2:Yes)\n";
 	do cin>>temp; while(checkchoice(temp,1,2)==0);
 	choice=checkchoice(temp,1,2);
-	if(choice==2) set_tcards(tm1,tm2);
-		if(t1_tc[0]!=-2 && t1_tc[1]!=-2) t1_tc[2]=t1_tc[0]+t1_tc[1]; else t1_tc[2]=-2;
-		if(t2_tc[0]!=-2 && t2_tc[1]!=-2) t2_tc[2]=t2_tc[0]+t2_tc[1]; else t2_tc[2]=-2;
-		if(t1_tc[2]!=-2 && t2_tc[2]!=-2) tcards=t1_tc[2]+t2_tc[2]; else tcards=-2;
+	if(choice==2){ set_tcards(tm1,tm2); return;}
+	if(t1_tc[0]!=-2 && t1_tc[1]!=-2) t1_tc[2]=t1_tc[0]+t1_tc[1]; else t1_tc[2]=-2;
+	if(t2_tc[0]!=-2 && t2_tc[1]!=-2) t2_tc[2]=t2_tc[0]+t2_tc[1]; else t2_tc[2]=-2;
+	if(t1_tc[2]!=-2 && t2_tc[2]!=-2) tcards=t1_tc[2]+t2_tc[2]; else tcards=-2;
 }
 void match::set_cards(team tm1,team tm2){
 	int choice,tp1,tp2,inptc1[2],inptc2[2],error,bar,j;
+	int warning_hm[28];
 	for(tp1=0; tm1.pr[tp1].sendexist(); tp1++);
 	for(tp2=0; tm2.pr[tp2].sendexist(); tp2++);
 	while(1){
@@ -1037,23 +1104,27 @@ void match::set_cards(team tm1,team tm2){
 			do{
 				bar++;
 				error=0;
+				warning_hm[i]=0;
 				if(bar>1) cout<<endl<<BOLDYELLOW<<"Error dar vared kardane cart. Try Again.\n\n"<<RESET;
 				cin>>cards[i][0]>>cards[i][1]>>cards[i][2]>>cards[i][3]>>cards[i][4];
 				if(easycheck(cards[i][0],1,2)==0) error=1;
 				if(easycheck(cards[i][1],1,2)==0 && cards[i][1]!=-2) error=1;
 				if(easycheck(cards[i][2],1,2)==0) error=1;
 				if(error==0){
-					if(cards[i][0]==1){ if(easycheck(cards[i][3],1,tp1)==0 && cards[i][3] != -2) error=1;}
-					else if(cards[i][0]==2){ if(easycheck(cards[i][3],1,tp2)==0 && cards[i][3] != -2) error=1;}
+					if(cards[i][0]==1){ if(easycheck(cards[i][3],1,tp1)==0 && cards[i][3] != -2) error=1; else if(exist_players(cards[i][3],t1_prs,t1_tvz)==0) error=1;}
+					else if(cards[i][0]==2){ if(easycheck(cards[i][3],1,tp2)==0 && cards[i][3] != -2) error=1; else if(exist_players(cards[i][3],t2_prs,t2_tvz)==0) error=1;}
 				}
-				if(cards[i][4]<0 || cards[i][4]>110) error=1;
+				if(cards[i][4]<0 || cards[i][4]>105) error=1;
 				if(cards[i][1]==2 && cards[i][4]<45) error=1;
+				if(cards[i][1]==1 && cards[i][4]>60) error=1;
+				if(cards[i][1]==1 && cards[i][4]>45) warning_hm[i]=1;
 			} while(error==1);
 			temp1.str("");
 			temp2.str("");
 			temp3.str("");
 			temp4.str("");
 			temp5.str("");
+			temp6.str("");
 			cout<<"Card "<<i+1<<": ";
 			if(cards[i][0]==1) temp1<<tm1.name; else if(cards[i][0]==2) temp1<<tm2.name;
 			if(cards[i][1]==1) temp2<<"First Half"; else if(cards[i][1]==2) temp2<<"Second Half"; else if(cards[i][0]==-2) temp2<<"UK";
@@ -1062,7 +1133,10 @@ void match::set_cards(team tm1,team tm2){
 			else if(cards[i][0]==1) temp4<<tm1.pr[cards[i][3]-1].name;
 			else if(cards[i][0]==2) temp4<<tm2.pr[cards[i][3]-1].name;
 			if(cards[i][4]==-2) temp5<<"UK"; else temp5<<cards[i][4];
-			cout<<temp1.str()<<" | "<<temp2.str()<<" | "<<temp3.str()<<" | "<<temp4.str()<<" | "<<temp5.str()<<endl;
+			if(warning_hm[i]==1) temp6<<BOLDYELLOW<<"Warning: H&M"<<RESET;
+			cout<<temp1.str()<<" | "<<temp2.str()<<" | "<<temp3.str()<<" | "<<temp4.str()<<" | "<<temp5.str();
+			if(warning_hm[i]==1) cout<<" | "<<temp6.str();
+			cout<<endl;
 		}
 		chapcards:
 		cout<<endl<<BOLDBLUE<<"All Cards: \n";	
@@ -1072,6 +1146,7 @@ void match::set_cards(team tm1,team tm2){
 			temp3.str("");
 			temp4.str("");
 			temp5.str("");
+			temp6.str("");
 			cout<<"Card "<<i+1<<": ";
 			if(cards[i][0]==1) temp1<<tm1.name; else if(cards[i][0]==2) temp1<<tm2.name;
 			if(cards[i][1]==1) temp2<<"First Half"; else if(cards[i][1]==2) temp2<<"Second Half"; else if(cards[i][0]==-2) temp2<<"UK";
@@ -1080,7 +1155,10 @@ void match::set_cards(team tm1,team tm2){
 			else if(cards[i][0]==1) temp4<<tm1.pr[cards[i][3]-1].name;
 			else if(cards[i][0]==2) temp4<<tm2.pr[cards[i][3]-1].name;
 			if(cards[i][4]==-2) temp5<<"UK"; else temp5<<cards[i][4];
-			cout<<temp1.str()<<" | "<<temp2.str()<<" | "<<temp3.str()<<" | "<<temp4.str()<<" | "<<temp5.str()<<endl;	
+			if(warning_hm[i]==1) temp6<<BOLDYELLOW<<"Warning: H&M"<<BOLDBLUE;
+			cout<<temp1.str()<<" | "<<temp2.str()<<" | "<<temp3.str()<<" | "<<temp4.str()<<" | "<<temp5.str();
+			if(warning_hm[i]==1) cout<<" | "<<temp6.str();
+			cout<<endl;
 		}
 		cout<<RESET<<endl;
 		inptc1[0]=0; inptc1[1]=0; inptc2[0]=0; inptc2[1]=0;
@@ -1089,6 +1167,11 @@ void match::set_cards(team tm1,team tm2){
 			if(cards[i][2]==2){ if(cards[i][0]==1) inptc1[1]++; else if(cards[i][0]==2) inptc2[1]++;}
 		}		
 		if(t1_tc[0] != inptc1[0] || t1_tc[1] != inptc1[1] || t2_tc[0] != inptc2[0] || t2_tc[1] != inptc2[1]) cout<<BOLDYELLOW<<endl<<"Error dar Tedade cart haye har team!!!\n"<<RESET;
+		for(int i=0,err=0; tcards-1>i && err==0; i++){
+			for(int j=i+1; tcards>j && err==0; j++){
+				if(cards[i][0]==cards[j][0] && cards[i][2]==cards[j][2] && cards[i][3]==cards[j][3]){ cout<<endl<<BOLDYELLOW<<"Error Dar Tedade Cart haye Yek Bazikon\n"<<RESET; err=1;}
+			}
+		}
 		cout<<endl<<"Do you want to edit? (1:No | 2:Yes)\n";
 		do cin>>temp; while(checkchoice(temp,1,2)==0);
 		choice=checkchoice(temp,1,2);
@@ -1102,24 +1185,36 @@ void match::set_cards(team tm1,team tm2){
 			do{	
 				bar++;
 				error=0;
+				warning_hm[j]=0;
 				if(bar>1) cout<<endl<<BOLDYELLOW<<"Error dar vared kardane cart. Try Again.\n\n"<<RESET;
 				cin>>cards[j][0]>>cards[j][1]>>cards[j][2]>>cards[j][3]>>cards[j][4];
 				if(easycheck(cards[j][0],1,2)==0) error=1;
 				if(easycheck(cards[j][1],1,2)==0 && cards[j][1]!=-2) error=1;
 				if(easycheck(cards[j][2],1,2)==0) error=1;
 				if(error==0){
-					if(cards[j][0]==1){ if(easycheck(cards[j][3],1,tp1)==0 && cards[j][3] != -2) error=1;}
-					else if(cards[j][0]==2){ if(easycheck(cards[j][3],1,tp2)==0 && cards[j][3] != -2) error=1;}
+					if(cards[j][0]==1){ if(easycheck(cards[j][3],1,tp1)==0 && cards[j][3] != -2) error=1; else if(exist_players(cards[j][3],t1_prs,t1_tvz)==0) error=1;}
+					else if(cards[j][0]==2){ if(easycheck(cards[j][3],1,tp2)==0 && cards[j][3] != -2) error=1; else if(exist_players(cards[j][3],t2_prs,t2_tvz)==0) error=1;}
 				}
-				if(cards[j][4]<0 || cards[j][4]>110) error=1;
+				if(cards[j][4]<0 || cards[j][4]>105) error=1;
 				if(cards[j][1]==2 && cards[j][4]<45) error=1;
+				if(cards[j][1]==1 && cards[j][4]>60) error=1;
+				if(cards[j][1]==1 && cards[j][4]>45) warning_hm[j]=1;
 			} while(error==1);
 			goto chapcards;
 		}
 		if(t1_tc[0] != inptc1[0] || t1_tc[1] != inptc1[1] || t2_tc[0] != inptc2[0] || t2_tc[1] != inptc2[1]){
 			cout<<endl<<BOLDYELLOW<<"Error dar Tedade cart haye har team!!!\nLotfan az ebteda cart ha ra vared konid\n"<<RESET;
 			goto inpcards;
-		}							
+		}
+		for(int i=0,err=0; tcards-1>i && err==0; i++){
+			for(int j=i+1; tcards>j && err==0; j++){
+				if(cards[i][0]==cards[j][0] && cards[i][2]==cards[j][2] && cards[i][3]==cards[j][3]){
+					cout<<endl<<BOLDYELLOW<<"Error Dar Tedade Cart haye Yek Bazikon\nLotfan az ebteda cart ha ra vared konid\n"<<RESET;
+					err=1;
+					goto inpcards;
+				}
+			}
+		}						
 		for(int i=0; 28-tcards>i; i++) for(int k=0; 5>k; k++) cards[27-i][k]=-1;
 		break;
 	}
@@ -1142,13 +1237,14 @@ void match::set_mom(team tm1,team tm2){
 		cin>>mom[0][0]>>mom[0][1]>>mom[1][0]>>mom[1][1];
 		if(easycheck(mom[0][1],1,2)==0 || easycheck(mom[1][1],1,2)==0) error=1;
 		if(error==0){
-			if(mom[0][1]==1){ if(easycheck(mom[0][0],1,tp1)==0 && mom[0][0]!=-2) error=1;}
-			else if(mom[0][1]==2){ if(easycheck(mom[0][0],1,tp2)==0 && mom[0][0]!=-2) error=1;}
+			if(mom[0][1]==1){ if(easycheck(mom[0][0],1,tp1)==0 || exist_players(mom[0][0],t1_prs,t1_tvz)==0) error=1;}
+			else if(mom[0][1]==2){ if(easycheck(mom[0][0],1,tp2)==0 || exist_players(mom[0][0],t2_prs,t2_tvz)==0) error=1;}
 		}
 		if(error==0){
-			if(mom[1][1]==1){ if(easycheck(mom[1][0],1,tp1)==0 && mom[1][0]!=-2) error=1;}
-			else if(mom[1][1]==2){ if(easycheck(mom[1][0],1,tp2)==0 && mom[1][0]!=-2) error=1;}
+			if(mom[1][1]==1){ if(easycheck(mom[1][0],1,tp1)==0 || exist_players(mom[1][0],t1_prs,t1_tvz)==0) error=1;}
+			else if(mom[1][1]==2){ if(easycheck(mom[1][0],1,tp2)==0 || exist_players(mom[1][0],t2_prs,t2_tvz)==0) error=1;}
 		}
+		if(mom[0][1]==mom[1][1] && mom[0][0]==mom[1][0]) error=1;
 	} while(error==1);
 	cout<<endl<<BOLDBLUE<<"Man of the match: ";
 	if(mom[0][1]==1) cout<<tm1.pr[mom[0][0]-1].name<<" from "<<tm1.name<<endl;
@@ -1159,7 +1255,7 @@ void match::set_mom(team tm1,team tm2){
 	cout<<endl<<"Do you want to edit? (1:No | 2:Yes)\n";
 	do cin>>temp; while(checkchoice(temp,1,2)==0);
 	choice=checkchoice(temp,1,2);
-	if(choice==2) set_mom(tm1,tm2);
+	if(choice==2){ set_mom(tm1,tm2); return;}
 }	
 void match::set_conf(team tm1,team tm2){
 	int choice,bar=0;
@@ -1421,13 +1517,13 @@ void subsume_players(team tm1,team tm2){
 			}
 			for(; 200>i; i++){ tmp[i][0]=0; tmp[i][1]=0; tmp[i][2]=-1;}
 			switch(choice){
-				case 1: moratab(tmp,1,tm1,tm2); break;
-				case 2: moratab(tmp,2,tm1,tm2); break;
-				case 3: moratab(tmp,3,tm1,tm2); break;
-				case 4: moratab(tmp,4,tm1,tm2); break;
-				case 5: moratab(tmp,5,tm1,tm2); break;
-				case 6: moratab(tmp,6,tm1,tm2); break;
-				case 7: moratab(tmp,7,tm1,tm2); break;
+				case 1: cout<<endl<<BOLDRED<<"Most Apps:\n"<<RESET; moratab(tmp,1,tm1,tm2); break;
+				case 2: cout<<endl<<BOLDRED<<"Top Scorers:\n"<<RESET; moratab(tmp,2,tm1,tm2); break;
+				case 3: cout<<endl<<BOLDRED<<"Top Assisters:\n"<<RESET; moratab(tmp,3,tm1,tm2); break;
+				case 4: cout<<endl<<BOLDRED<<"Most MOTM Points:\n"<<RESET; moratab(tmp,4,tm1,tm2); break;
+				case 5: cout<<endl<<BOLDRED<<"Most Yellow Cards:\n"<<RESET; moratab(tmp,5,tm1,tm2); break;
+				case 6: cout<<endl<<BOLDRED<<"Most Red Cards:\n"<<RESET; moratab(tmp,6,tm1,tm2); break;
+				case 7: cout<<endl<<BOLDRED<<"Most Violence:\n"<<RESET; moratab(tmp,7,tm1,tm2); break;
 			}
 			for(int i=0; 200>i; i++){
 				if(tmp[i][2]<1) break;
@@ -1438,6 +1534,167 @@ void subsume_players(team tm1,team tm2){
 			}
 		}
 	}
+}
+void match::show(team tm1,team tm2){
+	int s,t,c;
+	stringstream ts1[14];
+	stringstream ts2[14];
+	stringstream gl[30];
+	stringstream cs[28];
+	stringstream cadr;
+	if(t1_goals==-2) ts1[0]<<"UK"; else ts1[0]<<t1_goals;
+	if(t2_goals==-2) ts2[0]<<"UK"; else ts2[0]<<t2_goals;
+	if(t1_possess==-2) ts1[1]<<"UK"; else ts1[1]<<t1_possess<<"%";
+	if(t2_possess==-2) ts2[1]<<"UK"; else ts2[1]<<t2_possess<<"%";
+	if(t1_shots[0]!=-2 && t1_shots[1]!=-2) ts1[2]<<t1_shots[0]<<"("<<t1_shots[1]<<")";
+	if(t2_shots[0]!=-2 && t2_shots[1]!=-2) ts2[2]<<t2_shots[0]<<"("<<t2_shots[1]<<")";
+	if(t1_fouls[0]!=-2 && t1_fouls[1]!=-2) ts1[3]<<t1_fouls[0]<<"("<<t1_fouls[1]<<")";
+	if(t2_fouls[0]!=-2 && t2_fouls[1]!=-2) ts2[3]<<t2_fouls[0]<<"("<<t2_fouls[1]<<")";
+	if(t1_corners==-2) ts1[4]<<"UK"; else ts1[4]<<t1_corners;
+	if(t2_corners==-2) ts2[4]<<"UK"; else ts2[4]<<t2_corners;
+	if(t1_fk==-2) ts1[5]<<"UK"; else ts1[5]<<t1_fk;
+	if(t2_fk==-2) ts2[5]<<"UK"; else ts2[5]<<t2_fk;
+	if(t1_pass_c==-2) ts1[6]<<"UK"; else ts1[6]<<t1_pass_c<<"%";
+	if(t2_pass_c==-2) ts2[6]<<"UK"; else ts2[6]<<t2_pass_c<<"%";
+	if(t1_cross==-2) ts1[7]<<"UK"; else ts1[7]<<t1_cross;
+	if(t2_cross==-2) ts2[7]<<"UK"; else ts2[7]<<t2_cross;
+	if(t1_interc==-2) ts1[8]<<"UK"; else ts1[8]<<t1_interc;
+	if(t2_interc==-2) ts2[8]<<"UK"; else ts2[8]<<t2_interc;
+	if(t1_tackles==-2) ts1[9]<<"UK"; else ts1[9]<<t1_tackles;
+	if(t2_tackles==-2) ts2[9]<<"UK"; else ts2[9]<<t2_tackles;
+	if(t1_saves==-2) ts1[10]<<"UK"; else ts1[10]<<t1_saves;
+	if(t2_saves==-2) ts2[10]<<"UK"; else ts2[10]<<t2_saves;
+	if(t1_shots[0]==-2 || t1_shots[1]==-2){
+		if(t1_shots[0]==-2 && t1_shots[1]==-2) ts1[2]<<"Uk"; else if(t1_shots[0]==-2) ts1[2]<<"Uk("<<t1_shots[1]<<")"; else ts1[2]<<t1_shots[0]<<"(UK)";
+	}
+	if(t2_shots[0]==-2 || t2_shots[1]==-2){
+		if(t2_shots[0]==-2 && t2_shots[1]==-2) ts2[2]<<"Uk"; else if(t2_shots[0]==-2) ts2[2]<<"Uk("<<t2_shots[1]<<")"; else ts2[2]<<t2_shots[0]<<"(UK)";
+	}
+	if(t1_fouls[0]==-2 || t1_fouls[1]==-2){
+		if(t1_fouls[0]==-2 && t1_fouls[1]==-2) ts1[2]<<"Uk"; else if(t1_fouls[0]==-2) ts1[2]<<"Uk("<<t1_fouls[1]<<")"; else ts1[2]<<t1_fouls[0]<<"(UK)";
+	}
+	if(t2_fouls[0]==-2 || t2_fouls[1]==-2){
+		if(t2_fouls[0]==-2 && t2_fouls[1]==-2) ts2[2]<<"Uk"; else if(t2_fouls[0]==-2) ts2[2]<<"Uk("<<t2_fouls[1]<<")"; else ts2[2]<<t2_fouls[0]<<"(UK)";
+	}
+	temp1.str("");
+	cout<<endl<<BOLDRED;
+	temp1<<tm1.name<<" Against "<<tm2.name;
+	space(26); cout<<temp1.str()<<RESET;
+	temp1.str("");
+	if(year!=-2){
+		cout<<endl;
+		temp1<<BOLDWHITE<<"Date: ";
+		temp1<<year;
+		if(month!=-2 && month>9) temp1<<"/"<<month; else if(month!=-2 && month<10)temp1<<"/"<<"0"<<month;
+		if(month!=-2 && day!=-2 && day>9) temp1<<"/"<<day<<RESET<<endl; else if(day!=-2 && day<10)temp1<<"/"<<"0"<<day<<RESET<<endl;
+		strwhere(temp1.str().c_str(),86); cout<<endl;
+	}
+	cout<<endl<<endl;
+	cadr<<BOLDBLUE;
+	t=12; c=48; s=15;
+	space(s); cout<<cadr.str(); cadr_dash(c);
+	space(s); cout<<"|"<<BOLDCYAN; strwhere(tm1.name,t,1); cout<<BOLDBLUE; strwhere("Stats",22,1); cout<<BOLDCYAN; strwhere(tm2.name,t,1); cout<<cadr.str()<<"|"<<endl; space(s); cadr_dash(c);
+	space(s); cout<<"|"; strwhere(ts1[0].str().c_str(),t); strwhere("Goals Scored",22); strwhere(ts2[0].str().c_str(),t); cout<<cadr.str()<<"|"<<endl; space(s); cadr_dash(c);
+	space(s); cout<<"|"; strwhere(ts1[1].str().c_str(),t); strwhere("Possession",22); strwhere(ts2[1].str().c_str(),t); cout<<cadr.str()<<"|"<<endl; space(s); cadr_dash(c);
+	space(s); cout<<"|"; strwhere(ts1[2].str().c_str(),t); strwhere("Shots (On Target)",22); strwhere(ts2[2].str().c_str(),t); cout<<cadr.str()<<"|"<<endl; space(s); cadr_dash(c);
+	space(s); cout<<"|"; strwhere(ts1[3].str().c_str(),t); strwhere("Fouls (Offside)",22); strwhere(ts2[3].str().c_str(),t); cout<<cadr.str()<<"|"<<endl; space(s); cadr_dash(c);
+	space(s); cout<<"|"; strwhere(ts1[4].str().c_str(),t); strwhere("Corner Kicks",22); strwhere(ts2[4].str().c_str(),t); cout<<cadr.str()<<"|"<<endl; space(s); cadr_dash(c);
+	space(s); cout<<"|"; strwhere(ts1[5].str().c_str(),t); strwhere("Free Kicks",22); strwhere(ts2[5].str().c_str(),t); cout<<cadr.str()<<"|"<<endl; space(s); cadr_dash(c);
+	space(s); cout<<"|"; strwhere(ts1[6].str().c_str(),t); strwhere("Passes Completed (%)",22); strwhere(ts2[6].str().c_str(),t); cout<<cadr.str()<<"|"<<endl; space(s); cadr_dash(c);
+	space(s); cout<<"|"; strwhere(ts1[7].str().c_str(),t); strwhere("Crosses",22); strwhere(ts2[7].str().c_str(),t); cout<<cadr.str()<<"|"<<endl; space(s); cadr_dash(c);
+	space(s); cout<<"|"; strwhere(ts1[8].str().c_str(),t); strwhere("Interception",22); strwhere(ts2[8].str().c_str(),t); cout<<cadr.str()<<"|"<<endl; space(s); cadr_dash(c);
+	space(s); cout<<"|"; strwhere(ts1[9].str().c_str(),t); strwhere("Tackles",22); strwhere(ts2[9].str().c_str(),t); cout<<cadr.str()<<"|"<<endl; space(s); cadr_dash(c);
+	space(s); cout<<"|"; strwhere(ts1[10].str().c_str(),t); strwhere("Saves",22); strwhere(ts2[10].str().c_str(),t); cout<<cadr.str()<<"|"<<endl; space(s); cadr_dash(c);
+	for(int i=0; 14>i; i++){
+		ts1[i].str("");
+		ts2[i].str("");
+	}
+	for(int i=0; 11>i; i++) if(t1_prs[i]==-2) ts1[i]<<"UK"; else ts1[i]<<tm1.pr[t1_prs[i]-1].name;
+	for(int i=0; 11>i; i++) if(t2_prs[i]==-2) ts2[i]<<"UK"; else ts2[i]<<tm2.pr[t2_prs[i]-1].name;
+	for(int i=11; 14>i; i++){
+		if(t1_tt>i-11){ if(t1_tvz[i-11]==-2) ts1[i]<<"UK"; else ts1[i]<<tm1.pr[t1_tvz[i-11]-1].name;}
+	}
+	for(int i=11; 14>i; i++){
+		if(t2_tt>i-11){ if(t2_tvz[i-11]==-2) ts2[i]<<"UK"; else ts2[i]<<tm2.pr[t2_tvz[i-11]-1].name;}
+	}
+	cout<<endl<<endl;
+	cout<<BOLDBLUE; strwhere("Players",78,1); cout<<RESET<<endl;
+	s=21;
+	space(s); cout<<cadr.str()<<"------------------------------------"<<RESET<<endl;
+	t=17;
+	for(int i=0; 11>i; i++){
+		space(s); cout<<cadr.str()<<"|"<<RESET; 
+		if(mom[0][1]==1 && mom[0][0]==t1_prs[i] && t1_prs[i]!=-2) cout<<BOLDYELLOW;
+		if(mom[1][1]==1 && mom[1][0]==t1_prs[i] && t1_prs[i]!=-2) cout<<BOLDGREEN;
+		strwhere(ts1[i].str().c_str(),t,1); cout<<RESET;
+		if(mom[0][1]==2 && mom[0][0]==t2_prs[i] && t2_prs[i]!=-2) cout<<BOLDYELLOW;
+		if(mom[1][1]==2 && mom[1][0]==t2_prs[i] && t2_prs[i]!=-2) cout<<BOLDGREEN;
+		strwhere(ts2[i].str().c_str(),t,1); cout<<RESET;
+		cout<<cadr.str()<<"|"<<RESET<<endl; 
+	}
+	space(s); cout<<cadr.str()<<"------------------------------------"<<RESET<<endl;
+	for(int i=11; 14>i; i++){
+		space(s); cout<<cadr.str()<<"|"<<RESET; 
+		if(mom[0][1]==1 && mom[0][0]==t1_tvz[i-11] && t1_tvz[i-11]!=-2) cout<<BOLDYELLOW;
+		if(mom[1][1]==1 && mom[1][0]==t1_tvz[i-11] && t1_tvz[i-11]!=-2) cout<<BOLDGREEN;
+		strwhere(ts1[i].str().c_str(),t,1); cout<<RESET;
+		if(mom[0][1]==2 && mom[0][0]==t2_tvz[i-11] && t2_tvz[i-11]!=-2) cout<<BOLDYELLOW;
+		if(mom[1][1]==2 && mom[1][0]==t2_tvz[i-11] && t2_tvz[i-11]!=-2) cout<<BOLDGREEN;
+		strwhere(ts2[i].str().c_str(),t,1); cout<<RESET;
+		cout<<cadr.str()<<"|"<<RESET<<endl;		
+	}
+	space(s); cout<<cadr.str()<<"------------------------------------"<<RESET<<endl;
+	if(tg>0){
+		for(int i=0; tg>i; i++){
+			if(goals[i][4]==-2) gl[i]<<"UK | "; else gl[i]<<goals[i][4]<<" | ";
+			if(goals[i][0]==1){
+				if(goals[i][2]==-2) gl[i]<<"UK ("; else gl[i]<<tm1.pr[goals[i][2]-1].name<<" (";
+				if(goals[i][3]==-2) gl[i]<<"UK)"; else if(goals[i][3]==-1) gl[i]<<"WA)"; else gl[i]<<tm1.pr[goals[i][3]-1].name<<")";
+			}
+			if(goals[i][0]==2){
+				if(goals[i][2]==-2) gl[i]<<"UK ("; else gl[i]<<tm2.pr[goals[i][2]-1].name<<" (";
+				if(goals[i][3]==-2) gl[i]<<"UK)"; else if(goals[i][3]==-1) gl[i]<<"WA)"; else gl[i]<<tm2.pr[goals[i][3]-1].name<<")";
+			}
+		}
+		cout<<endl<<endl;
+		cout<<BOLDBLUE; strwhere("Goals",78,1); cout<<RESET<<endl;
+		space(17); cout<<cadr.str()<<"----------------------------------------------"<<RESET<<endl;
+		for(int i=0; tg>i; i++){
+			if(goals[i][0]==1){space(20); cout<<BOLDMAGENTA<<gl[i].str()<<RESET<<endl;}
+			if(goals[i][0]==2){space(30); cout<<BOLDCYAN<<gl[i].str()<<RESET<<endl;}
+		}
+		space(17); cout<<cadr.str()<<"----------------------------------------------"<<RESET<<endl;
+	}
+	if(tcards>0){
+		for(int i=0; tcards>i; i++){
+			if(cards[i][4]==-2) cs[i]<<"UK | "; else cs[i]<<cards[i][4]<<" | ";
+			if(cards[i][2]==1) cs[i]<<BOLDYELLOW<<"Yellow"<<RESET<<" | "; else if(cards[i][2]==2) cs[i]<<BOLDRED<<"Red"<<RESET<<" | ";
+			if(cards[i][0]==1){
+				if(cards[i][2]==-2) cs[i]<<BOLDMAGENTA<<"UK"; else cs[i]<<BOLDMAGENTA<<tm1.pr[cards[i][3]-1].name;
+			}
+			if(cards[i][0]==2){
+				if(cards[i][2]==-2) cs[i]<<BOLDCYAN<<"UK"; else cs[i]<<BOLDCYAN<<tm2.pr[cards[i][3]-1].name;
+			}
+		}
+		cout<<endl<<endl;
+		cout<<BOLDBLUE; strwhere("Cards",78,1); cout<<RESET<<endl;
+		space(17); cout<<cadr.str()<<"----------------------------------------------"<<RESET<<endl;
+		for(int i=0; tcards>i; i++){
+			if(cards[i][0]==1){space(20); cout<<BOLDMAGENTA<<cs[i].str()<<RESET<<endl;}
+			if(cards[i][0]==2){space(30); cout<<BOLDCYAN<<cs[i].str()<<RESET<<endl;}
+		}					
+		space(17); cout<<cadr.str()<<"----------------------------------------------"<<RESET<<endl;
+	}			
+}
+void show_game(match *g,team tm1,team tm2){
+	char temp[10];
+	int choice,tedad;
+	for(tedad=0; g[tedad].sendexist()==1; tedad++);
+	cout<<endl<<"Enter Number of Game: ";
+	do cin>>temp; while(checkchoice(temp,1,tedad)==0);
+	choice=checkchoice(temp,1,tedad);
+	choice--;
+	g[choice].show(tm1,tm2);
 }
 /*void match::print_goals(team tm1,team tm2){
 	cout<<endl<<BOLDBLUE;
