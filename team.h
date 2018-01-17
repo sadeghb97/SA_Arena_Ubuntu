@@ -445,7 +445,7 @@ class team{
 		return pr[index].sendapps()<=0;
 	}
         
-    void inputPrDetails(char nameVar[],int& post,int index){
+    void inputPrDetails(char nameVar[],int& post,int& number,int index){
         input:
         cout<<"\nPlayer "<<index+1 <<":\n";
 		cout<<"Enter Name: ";
@@ -459,10 +459,16 @@ class team{
 		}
         cout<<"Enter Post (1-5): ";
         post=inputChoice(1,5);
+		if(number==-1){
+			cout<<"Enter Shirt Number (0 To Random): ";
+			number=inputChoice(0,200);
+			if(number==0) number=generateRandomNumber(post);
+		}
     }
 	
 	void add_prs(team other){
-		int choice,i,post;
+		int choice,i,post,number;
+		int numSecond;
 		char nameVar[30];
 		do{
 			for(i=0; pr[i].sendexist()!=0; i++);
@@ -472,12 +478,23 @@ class team{
 			}
                         
             input:
-			inputPrDetails(nameVar,post,i);
+            numSecond=-1;
+			number=-1;
+			inputPrDetails(nameVar,post,number,i);
                         
             setColor("BOLDBLUE");
             cout<<endl<<"Name: "<<nameVar<<" | Post: ";
             player::printPost(post);
-            cout<<endl;
+			setColor("BOLDBLUE");
+			cout<<" | Number: ";
+			setColor("BOLDMAGENTA");
+			cout<<number<<endl;
+			setColor("RESET");
+			if(existNumber(number)){
+				numSecond=generateRandomNumber(getPrFromNumber(number).getPost());
+				typeWarning();
+				cout<<getPrFromNumber(number).sendname()<<": "<<number<<" -> "<<numSecond<<endl;
+			}
                         
             setColor("BOLDRED");
             cout<<endl<<"Next Work?\n";
@@ -487,7 +504,10 @@ class team{
             choice=inputChoice(1,4);
             if(choice==2) goto input;
             if(choice==3) return;
-			pr[i].input(nameVar,post,generateRandomNumber(post),generateNewPrId(*this,other));
+			if(numSecond!=-1){
+				getPrFromNumber(number).setNumber(numSecond);
+			}
+			pr[i].input(nameVar,post,number,generateNewPrId(*this,other));
             IS_SAVED=false;
 		} while(choice==1);
 	}
@@ -595,7 +615,7 @@ class team{
         setColor("BOLDRED");
         cout<<"Next Work?\n";
         setColor("RESET");
-        cout<<"1: Edit This Player\n";
+        cout<<"1: Edit Name And Post\n";
         cout<<"2: Change Number\n";
         if(prAllowDelete(index)){
             canDel=1;
@@ -613,8 +633,9 @@ class team{
         else if(choice==1){
 			char nameVar[30];
             int post;
+			int num=getPrFromIndex(index).getNumber();
             input:
-			inputPrDetails(nameVar,post,index);
+			inputPrDetails(nameVar,post,num,index);
             cout<<endl;      
             setColor("BOLDBLUE");
             cout<<endl<<"Name: "<<nameVar<<" | Post: ";

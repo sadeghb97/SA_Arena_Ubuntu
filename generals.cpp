@@ -1,5 +1,52 @@
 #include "saheader.h"
 
+int doubleToInt(double d){
+	int sum=0;
+	char temp[30];
+	sprintf(temp,"%f",d);
+	for(int i=0; temp[i]!=0 && temp[i]!='.'; i++){
+		sum=(sum*10)+(temp[i]-48);
+	}
+	return sum;
+}
+
+int compareDoubleDecimals(double d1,double d2){
+	char temp1[30];
+	char temp2[30];
+	sprintf(temp1,"%f",d1);
+	sprintf(temp2,"%f",d2);
+	
+	int ind1,ind2;
+	for(ind1=0; temp1[ind1]!='.'; ind1++);
+	for(ind2=0; temp2[ind2]!='.'; ind2++);
+	ind1++;
+	ind2++;
+	
+	for(int i=0; 6>i; i++,ind1++,ind2++){
+		if(temp1[ind1]==0 && temp2[ind2]==0) return 0;
+		else if(temp1[ind1]==0) return 2;
+		else if(temp2[ind2]==0) return 1;
+		else{
+			if(temp1[ind1]>temp2[ind2]) return 1;
+			else if(temp1[ind1]<temp2[ind2]) return 2;
+		}
+	}
+	
+	return 0;
+}
+
+bool isInt(double d1){
+	char temp1[30];
+	sprintf(temp1,"%f",d1);
+	int ind1;
+	for(ind1=0; temp1[ind1]!='.'; ind1++);
+	ind1++;
+	for(int i=0; 6>i; i++,ind1++){
+		if(temp1[ind1]!=48) return false;
+	}
+	return true;
+}
+
 void swap(int &a,int &b){
 	int temp=a;
 	a=b;
@@ -433,6 +480,7 @@ bool load(team &tm1, team &tm2, match *m,inputProfile& inpSettings){
     cout<<fileName<<" Loaded Successfully.\n";
     setColor("RESET");
     strcpy(DATA_FILE_NAME,fileName);
+	IS_SAVED=true;
     return true;
 }
 
@@ -500,11 +548,11 @@ bool enterTeams(team& tm1,team& tm2){
     return true;
 }
 
-bool mainMenu(team& t1,team& t2,match *games,inputProfile& inpSettings){
+bool mainMenu(team& t1,team& t2,match *games,inputProfile& inpSettings,const char* arg){
     while(true){
         int num=0;
         bool canSave=strcmp(DATA_FILE_NAME,NULL_PATH_STRING)!=0;
-        cout<<BOLDRED;
+        setColor("BOLDRED");
         cout<<"\nMenu: \n";
         setColor("RESET");
         cout<<++num<<": ";
@@ -528,7 +576,7 @@ bool mainMenu(team& t1,team& t2,match *games,inputProfile& inpSettings){
         int choice = inputChoice(1,num+2+canSave);
         if(choice==1) t1.teamManage(t2);
         else if(choice==2) t2.teamManage(t1);
-		else if(choice==3 && lostDataWarning(t1,t2,games,inpSettings,true)) externalShowAllPrs();
+		else if(choice==3 && lostDataWarning(t1,t2,games,inpSettings,true)) externalShowAllPrs(arg);
         else if(choice==4) add_game(games,t1,t2,inpSettings);
         else if(choice==5) editGame(games,t1,t2);
         else if(choice==6) show_game(games,t1,t2);
@@ -558,11 +606,11 @@ void competition_stats(team tm1,team tm2,match m[200]){
 	
 	while(1){
 		cout<<"\n";
-		cout<<BOLDRED;
+		setColor("BOLDRED");
         cout<<"Competition Stats:\n";
         setColor("RESET");
 		cout<<"1: Compare Teams\n2: Results Graph\n3: See Most\n4: Goals Times\n5: Best Solo Performance\n"
-		<<"6: Subsume Players\n7: Winners Against Loosers\n8: Back to main\n\nEnter your choice\n";
+		<<"6: Subsume Players\n7: Winners Against Loosers\n8: Back to main\n\nEnter your choice: ";
         choice=inputChoice(1,8);
 		switch(choice){
 			//case 1: league.compareTeams(); break;
@@ -622,10 +670,17 @@ int choiceMatch(match *m,team tm1,team tm2){
 	return choice;
 }
 
-void externalShowAllPrs(){
+void externalShowAllPrs(const char* arg){
+	if(strcmp(DATA_FILE_NAME,NULL_PATH_STRING)==0){
+		cout<<endl;
+		typeError();
+		cout<<"Save Data Not Found!"<<endl;
+		return;
+	}
+	
 	char command[150];
 	//sprintf(command,"gnome-terminal --command=./%s __players %s",EXE_APP_NAME,DATA_FILE_NAME);
-	sprintf(command,"gnome-terminal -e \"./%s __players %s\" --geometry==44x41",EXE_APP_NAME,DATA_FILE_NAME);
+	sprintf(command,"gnome-terminal -e \"./%s __players %s\" --geometry==44x41",arg,DATA_FILE_NAME);
 	system(command);
 }
 
@@ -704,6 +759,20 @@ void show_game(match *m,team tm1,team tm2){
 }
 
 void newTermPlayers(team tm1,team tm2,match *m){
+	int numPrs1=tm1.getNumPrs();
+	int numPrs2=tm2.getNumPrs();
+	int maxNumPrs;
+	if(numPrs1>numPrs2) maxNumPrs=numPrs1;
+	else maxNumPrs=numPrs2;
+	
+	cout<<endl;
+	char charCommand[80];
+	sprintf(charCommand,"resize -s %d %d",maxNumPrs+5,44);
+	system(charCommand);
+	cout<<endl;
+	
+	system("reset");
+	
 	bool t1PrintedPrs[200];
 	bool t2PrintedPrs[200];
 	int t1Ids[200];
@@ -755,6 +824,7 @@ void newTermPlayers(team tm1,team tm2,match *m){
 			}
 		}
 	}
+	
 	
 	for(int i=0; tm1.getPrFromIndex(i).sendexist(); i++){
 		int Index=i;
@@ -914,7 +984,7 @@ void showWALTable(teamGameStat teamOne,teamGameStat teamTwo,bool showCards, bool
 	space(s); beforeStrWhere(temp1,c); cout<<endl<<endl;
 
 	space(s); ccsPrint(cadr); cadr_dash(c);
-	space(s); cout<<"|"; cout<<BOLDCYAN; strwhere(teamOne.name,t,1); cout<<BOLDBLUE; strwhere("Stats",ttitle,1); cout<<BOLDCYAN; strwhere(teamTwo.name,t,1); ccsPrint(cadr); cout<<"|"<<endl; space(s); cadr_dash(c);
+	space(s); cout<<"|"; setColor("BOLDCYAN"); strwhere(teamOne.name,t,1); setColor("BOLDBLUE"); strwhere("Stats",ttitle,1); setColor("BOLDCYAN"); strwhere(teamTwo.name,t,1); ccsPrint(cadr); cout<<"|"<<endl; space(s); cadr_dash(c);
 	
 	if(exGoals){ space(s); cout<<"|"; strwhere(ts1[0],t); strwhere("Goals Scored",ttitle); strwhere(ts2[0],t); ccsPrint(cadr); cout<<"|"<<endl; space(s); cadr_dash(c);}
 	

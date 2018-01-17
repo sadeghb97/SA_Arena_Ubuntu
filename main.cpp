@@ -2,16 +2,13 @@
 
 char* DATA_FILE_NAME;
 char* NULL_PATH_STRING;
-char* EXE_APP_NAME;
 bool IS_SAVED;
 
 int main(int argc, char** argv) {
     DATA_FILE_NAME=new char[256];
     NULL_PATH_STRING=new char[100];
-	EXE_APP_NAME=new char[150];
-    strcpy(NULL_PATH_STRING,"###NULLPATH###");
+	strcpy(NULL_PATH_STRING,"###NULLPATH###");
     strcpy(DATA_FILE_NAME,NULL_PATH_STRING);
-	strcpy(EXE_APP_NAME,"arenacpp");
     IS_SAVED=true;
     srand(time(NULL));
     int choice;
@@ -36,7 +33,6 @@ int main(int argc, char** argv) {
 			cin.getline(temp,20);
 			if(strcmp(temp,"q")==0 || strcmp(temp,"Q")==0) break;
 			else if(strcmp(temp,"R")==0 || strcmp(temp,"r")==0){
-				system("clear");
 				goto start_squads;
 			}
 		}
@@ -71,6 +67,9 @@ int main(int argc, char** argv) {
     
     //correctData(t1,t2,games,inpSettings);
     
-    if(!mainMenu(t1,t2,games,inpSettings)) goto newtour;
+    if(!mainMenu(t1,t2,games,inpSettings,argv[0])){
+		strcpy(DATA_FILE_NAME,NULL_PATH_STRING);
+		goto newtour;
+	}
     return 0;
 }

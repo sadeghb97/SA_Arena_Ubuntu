@@ -723,16 +723,23 @@ class competition{
 			return;
 		}
 		
+		bool whiteStar=false;
+		
 		double unit=(t1val+t2val)/nStar;
-		int t1Star=t1val/unit;
-		int t2Star=t2val/unit;
-		double t1Ashar=(t1val/unit)-t1Star;
-		double t2Ashar=(t2val/unit)-t2Star;
-		bool whiteStar=(t1Ashar==t2Ashar && t1Ashar!=0);
-		if(!whiteStar){
-			if(t1Ashar>t2Ashar) t1Star++;
-			else if(t2Ashar>t1Ashar) t2Star++;
+		double val1=t1val/unit;
+		double val2=t2val/unit;
+		
+		int t1Star=doubleToInt(val1);
+		int t2Star=doubleToInt(val2);
+		
+		if((t1Star+t2Star)!=30){
+			whiteStar=(compareDoubleDecimals(val1,val2)==0 && !isInt(val1));
+			if(!whiteStar){
+				if(compareDoubleDecimals(val1,val2)==1) t1Star++;
+				else if(compareDoubleDecimals(val1,val2)==2) t2Star++;
+			}
 		}
+		
 		setColor("BOLDMAGENTA");
 		for(int i=0; t1Star>i; i++) cout<<"*";
 		if(whiteStar){

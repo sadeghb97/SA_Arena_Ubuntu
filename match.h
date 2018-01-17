@@ -883,7 +883,7 @@ class match{
 				setColor("BOLDRED");
 				cout<<"\nNext Work?\n";
 				setColor("RESET");
-				cout<<"1:Try Again\n2: Edit Game Input Settings\n3: Go to Number of Goals Session\n";
+				cout<<"1: Try Again\n2: Edit Game Input Settings\n3: Go to Number of Goals Session\n";
 				cout<<"4: Go to Line Up Session\n";
 				cout<<"\nEnter Your Choice: ";
 				choice =inputChoice(1,4);
@@ -898,12 +898,13 @@ class match{
 				}
 				else if(choice==4){
 					setColor("BOLDRED");
-					cout<<"Works:\n";
+					cout<<"\nWorks:\n";
 					setColor("RESET");
 					cout<<"1: Enter Complete Teams Line Ups\n";
 					cout<<"2: Enter "<<tm1.getName()<<" Line Up\n";
 					cout<<"3: Enter "<<tm2.getName()<<" Line Up\n";
 					cout<<"4: Cancel And Try Again to Entering Goal\n";
+					cout<<"\nEnter Your Choice: ";
 					choice=inputChoice(1,4);
 					if(choice==1){
 						setFirstLineup(tm1);
@@ -924,8 +925,9 @@ class match{
 				cout<<endl;
 			}
 			
-			first=false;
 			if(!first) cout<<"Enter The Card: ";
+			first=false;
+			
 			temp[0]=nextInt();
 			temp[1]=nextInt();
 			temp[2]=nextInt();
@@ -1087,7 +1089,7 @@ class match{
 				setColor("BOLDRED");
 				cout<<"\nNext Work?\n";
 				setColor("RESET");
-				cout<<"1:Try Again\n2: Edit Game Input Settings\n3: Go to Number of Goals Session\n";
+				cout<<"1: Try Again\n2: Edit Game Input Settings\n3: Go to Number of Goals Session\n";
 				cout<<"4: Go to Line Up Session\n";
 				cout<<"\nEnter Your Choice: ";
 				choice =inputChoice(1,4);
@@ -1102,12 +1104,13 @@ class match{
 				}
 				else if(choice==4){
 					setColor("BOLDRED");
-					cout<<"Works:\n";
+					cout<<"\nWorks:\n";
 					setColor("RESET");
 					cout<<"1: Enter Complete Teams Line Ups\n";
 					cout<<"2: Enter "<<tm1.getName()<<" Line Up\n";
 					cout<<"3: Enter "<<tm2.getName()<<" Line Up\n";
 					cout<<"4: Cancel And Try Again to Entering Goal\n";
+					cout<<"\nEnter Your Choice: ";
 					choice=inputChoice(1,4);
 					if(choice==1){
 						setFirstLineup(tm1);

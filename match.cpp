@@ -692,6 +692,8 @@ void match::set_cards(team tm1,team tm2,inputProfile& inpSettings,bool edit, boo
                 
                 
         finalquest:
+        error=0;
+        
 		inptc1[0]=0; inptc1[1]=0; inptc2[0]=0; inptc2[1]=0;
 		for(int i=0; tcards>i; i++){
 			if(cards[i][2]==1){ if(cards[i][0]==1) inptc1[0]++; else if(cards[i][0]==2) inptc2[0]++;}

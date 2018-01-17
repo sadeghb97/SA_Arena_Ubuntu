@@ -7,10 +7,14 @@
 const int MAX_GAMES = 200;
 extern char* DATA_FILE_NAME;
 extern char* NULL_PATH_STRING;
-extern char* EXE_APP_NAME;
 extern bool IS_SAVED;
 
 using namespace std;
+
+int doubleToInt(double);
+int compareDoubleDecimals(double,double);
+bool isInt(double);
+
 void beforeStrWhere(const char*,int);
 void beforeStrWhere(stringstream &,int);
 void strwhere(const char*,int,int);
@@ -55,11 +59,11 @@ bool loadTxt(char*,team &, team &, match *,inputProfile &);
 bool loadTxt(const char*,team &, team &, match *,inputProfile &);
 bool lostDataWarning(team,team,match *,inputProfile,bool showWarn=false);
 bool exitApp(team,team,match *,inputProfile);
-bool mainMenu(team&,team&,match *,inputProfile&);
+bool mainMenu(team&,team&,match *,inputProfile&,const char*);
 bool enterTeams(team&,team&);
 int generateNewPrId(team,team);
 int choiceMatch(match *,team,team);
-void externalShowAllPrs();
+void externalShowAllPrs(const char*);
 int getNumGames(match *);
 void add_game(match *,team &,team &, inputProfile &);
 void editGame(match *,team &,team &);
