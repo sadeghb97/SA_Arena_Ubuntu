@@ -6,12 +6,15 @@
 #include <sstream>
 #include <iomanip>
 #include <string.h>
+#include <string>
 #include <limits.h>
 #include <stdlib.h>
 #include "generals.h"
 #include "input.h"
 #include "print.h"
 #include "date.h"
+#include "inputProfile.h"
+#include "FileNames.h"
 #include "player.h"
 #include "team.h"
 #include "teamgstat.h"

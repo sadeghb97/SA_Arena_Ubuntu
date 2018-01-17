@@ -35,10 +35,29 @@ struct teamGameStat{
 		return false;
 	}
 	
-	void convertToPerGame(int number){
-		nSub/=number; nGoals/=number; possess/=number; shots[0]/=number; shots[1]/=number;
-		fouls[0]/=number; fouls[1]/=number; corners/=number; fk/=number; passC/=number;
-		cross/=number; interc/=number; tackles/=number; saves/=number; nCards[0]/=number; nCards[1]/=number;
+	void convertToPerGame(int number[]){
+		int num=-1;
+		if(number[++num]>0){ nGoals/=number[num];} else{ nGoals=-2;}
+		if(number[++num]>0){ possess/=number[num];} else{ possess=-2;}
+		
+		if(number[++num]>0){ shots[0]/=number[num]; shots[1]/=number[num];}
+		else{ shots[0]=-2; shots[1]=-2;}
+			
+		if(number[++num]>0){ fouls[0]/=number[num]; fouls[1]/=number[num];}
+		else{ fouls[0]=-2; fouls[1]=-2;}
+		
+		if(number[++num]>0){ corners/=number[num];} else{ corners=-2;}
+		if(number[++num]>0){ fk/=number[num];} else{ fk=-2;}
+		if(number[++num]>0){ passC/=number[num];} else{ passC=-2;}
+		if(number[++num]>0){ cross/=number[num];} else{ cross=-2;}
+		if(number[++num]>0){ interc/=number[num];} else{ interc=-2;}
+		if(number[++num]>0){ tackles/=number[num];} else{ tackles=-2;}
+		if(number[++num]>0){ saves/=number[num];} else{ saves=-2;}
+		
+		if(number[++num]>0){ nCards[0]/=number[num]; nCards[1]/=number[num];}
+		else{ nCards[0]=-2; nCards[1]=-2;}
+		
+		if(number[++num]>0){ nSub/=number[num];} else{ nSub=-2;}
 	}
 };
 

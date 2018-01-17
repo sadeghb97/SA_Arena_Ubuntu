@@ -8,15 +8,18 @@ int stringToInt(char a[]){
     if(a[first]==0) return INT_MAX;
     for (t=0; a[t]; t++);
     
-    for (int i=first; t>i; i++) if(a[i]>57 || a[i]<48){
+    for (int i=first; t>i; i++){
+		if(a[i]>57 || a[i]<48){
             return INT_MAX;
+		}
     }
+    
     if(t-first>9) return INT_MAX-1;
     for (int i=first; t-1>i; i++) zarb=zarb*10;
     for (int i=first; t>i; i++){
-            r= a[i]-48;
-            out=out+r*zarb;
-            zarb=zarb/10;
+		r= a[i]-48;
+		out=out+r*zarb;
+		zarb=zarb/10;
     }
     
     if(first==1) out=-(out);
@@ -61,7 +64,7 @@ bool ukEasycheck (int num, int min, int max,bool waAccept){
 }
 
 bool ukEasycheck (int num, int min, int max){
-    ukEasycheck(num,min,max,false);
+    return ukEasycheck(num,min,max,false);
 }
 
 int inputChoice(int min,int max){

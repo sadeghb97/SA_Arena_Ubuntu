@@ -1,0 +1,1 @@
+/usr/bin/c++   -g   CMakeFiles/arenacpp.dir/main.cpp.o CMakeFiles/arenacpp.dir/generals.cpp.o CMakeFiles/arenacpp.dir/input.cpp.o CMakeFiles/arenacpp.dir/match.cpp.o CMakeFiles/arenacpp.dir/print.cpp.o  -o arenacpp -rdynamic 
